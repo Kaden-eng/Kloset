@@ -24,32 +24,55 @@ export function useInventoryItems() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryTrigger, setRetryTrigger] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const loadItems = useCallback(async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      console.debug("[useInventoryItems] No authenticated user, skipping inventory load");
+      setLoading(false);
+      return;
+    }
+
+    if (isLoading) {
+      console.debug("[useInventoryItems] Load already in progress, skipping");
+      return;
+    }
 
     try {
+      console.debug("[useInventoryItems] Starting inventory load for user:", session.user.id);
+      setIsLoading(true);
       setLoading(true);
       setError(null);
+
       const data = await db.getInventoryItems(session.user.id);
       setItems(data);
+      console.debug("[useInventoryItems] Successfully loaded", data.length, "items");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load inventory');
+      const message = err instanceof Error ? err.message : 'Failed to load inventory';
+      console.error("[useInventoryItems] Inventory load failed:", message);
+      setError(message);
     } finally {
       setLoading(false);
+      setIsLoading(false);
     }
-  }, [db, session?.user?.id]);
+  }, [db, session?.user?.id, isLoading]);
 
   useEffect(() => {
     loadItems();
-  }, [loadItems]);
+  }, [loadItems, retryTrigger]);
 
   // Real-time subscription
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      console.debug("[useInventoryItems] No user session, skipping realtime subscription");
+      return;
+    }
+
+    console.debug("[useInventoryItems] Setting up realtime subscription for user:", session.user.id);
 
     const channel = supabase
-      .channel('inventory_changes')
+      .channel(`inventory_changes_${session.user.id}`)
       .on(
         'postgres_changes',
         {
@@ -59,6 +82,7 @@ export function useInventoryItems() {
           filter: `user_id=eq.${session.user.id}`,
         },
         (payload) => {
+          console.debug("[useInventoryItems] Realtime update received:", payload.eventType);
           if (payload.eventType === 'INSERT') {
             setItems(prev => [payload.new as InventoryItem, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
@@ -70,9 +94,12 @@ export function useInventoryItems() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.debug("[useInventoryItems] Realtime subscription status:", status);
+      });
 
     return () => {
+      console.debug("[useInventoryItems] Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
   }, [supabase, session?.user?.id]);
@@ -108,6 +135,11 @@ export function useInventoryItems() {
     setItems(prev => prev.filter(item => item.id !== id));
   }, [db, session?.user?.id]);
 
+  const retry = useCallback(() => {
+    console.debug("[useInventoryItems] Retry inventory load requested");
+    setRetryTrigger((count) => count + 1);
+  }, []);
+
   return {
     items,
     loading,
@@ -115,7 +147,8 @@ export function useInventoryItems() {
     createItem,
     updateItem,
     deleteItem,
-    refresh: loadItems
+    refresh: loadItems,
+    retry,
   };
 }
 
@@ -130,10 +163,12 @@ export function useInventoryItem(id: number) {
     if (!session?.user?.id) return;
 
     try {
+      console.debug("[useInventoryItem] Loading item", id);
       setLoading(true);
       setError(null);
       const data = await db.getInventoryItem(id, session.user.id);
       setItem(data);
+      console.debug("[useInventoryItem] Loaded item", data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load item');
     } finally {
@@ -170,10 +205,12 @@ export function useMarketplaceAnalytics(inventoryItemId: number) {
 
   const loadAnalytics = useCallback(async () => {
     try {
+      console.debug("[useMarketplaceAnalytics] Loading analytics for item", inventoryItemId);
       setLoading(true);
       setError(null);
       const data = await db.getMarketplaceAnalytics(inventoryItemId);
       setAnalytics(data);
+      console.debug("[useMarketplaceAnalytics] Loaded analytics", data.length);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load analytics');
     } finally {
@@ -210,10 +247,12 @@ export function useInventoryStats() {
     if (!session?.user?.id) return;
 
     try {
+      console.debug("[useInventoryStats] Loading stats for user", session.user.id);
       setLoading(true);
       setError(null);
       const data = await db.getInventoryStats(session.user.id);
       setStats(data);
+      console.debug("[useInventoryStats] Loaded stats", data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load stats');
     } finally {
@@ -270,6 +309,7 @@ export function useSearchInventory(query?: string, category?: string, status?: s
     if (!session?.user?.id) return;
 
     try {
+      console.debug("[useSearchInventory] Searching inventory", { searchQuery, searchCategory, searchStatus });
       setLoading(true);
       setError(null);
       const data = await db.searchInventoryItems(

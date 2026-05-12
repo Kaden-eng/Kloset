@@ -24,29 +24,45 @@ export default function SupabaseProvider({
     let active = true;
 
     supabaseClient.auth.getSession().then(async ({ data }) => {
-      if (active) {
-        setSession(data.session);
+      if (!active) return;
+      setSession(data.session);
 
-        // If we have a user but no profile, create one
+      try {
         if (data.session?.user) {
-          const { data: profile } = await supabaseClient
+          const { data: profile, error: profileError } = await supabaseClient
             .from('profiles')
             .select('id')
             .eq('id', data.session.user.id)
             .single();
 
+          if (profileError) {
+            console.warn("Profile lookup failed", profileError);
+          }
+
           if (!profile) {
-            // Create profile if it doesn't exist
-            await (supabaseClient as any)
+            console.debug("Creating missing profile for user", data.session.user.id);
+            const { error: insertError } = await (supabaseClient as any)
               .from('profiles')
               .insert({
                 id: data.session.user.id,
                 email: data.session.user.email!,
-                username: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.username || data.session.user.email!.split('@')[0],
+                username:
+                  data.session.user.user_metadata?.full_name ||
+                  data.session.user.user_metadata?.username ||
+                  data.session.user.email!.split('@')[0],
               });
+
+            if (insertError) {
+              console.error("Failed to create user profile", insertError);
+            }
           }
         }
+      } catch (error) {
+        console.error("Error initializing session profile", error);
       }
+    }).catch((error) => {
+      console.error("Failed to get Supabase session", error);
+      setSession(null);
     });
 
     const {
@@ -54,22 +70,37 @@ export default function SupabaseProvider({
     } = supabaseClient.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
 
-      // If user just signed in and we don't have a profile, create one
       if (session?.user && _event === 'SIGNED_IN') {
-        const { data: profile } = await supabaseClient
-          .from('profiles')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
-
-        if (!profile) {
-          await (supabaseClient as any)
+        try {
+          const { data: profile, error: profileError } = await supabaseClient
             .from('profiles')
-            .insert({
-              id: session.user.id,
-              email: session.user.email!,
-              username: session.user.user_metadata?.full_name || session.user.user_metadata?.username || session.user.email!.split('@')[0],
-            });
+            .select('id')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) {
+            console.warn("Profile lookup failed on sign-in", profileError);
+          }
+
+          if (!profile) {
+            console.debug("Creating profile after sign-in", session.user.id);
+            const { error: insertError } = await (supabaseClient as any)
+              .from('profiles')
+              .insert({
+                id: session.user.id,
+                email: session.user.email!,
+                username:
+                  session.user.user_metadata?.full_name ||
+                  session.user.user_metadata?.username ||
+                  session.user.email!.split('@')[0],
+              });
+
+            if (insertError) {
+              console.error("Failed to create profile after sign-in", insertError);
+            }
+          }
+        } catch (error) {
+          console.error("Auth state change profile initialization failed", error);
         }
       }
     });

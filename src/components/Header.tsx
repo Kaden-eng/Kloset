@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/components/SupabaseProvider";
+import { useToast } from "@/components/ToastProvider";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
@@ -13,7 +14,37 @@ const navLinks = [
 export default function Header({ transparent = false }: { transparent?: boolean }) {
   const { session, supabase } = useSupabase();
   const router = useRouter();
+  const { addToast } = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (menuRef.current && !menuRef.current.contains(target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [menuOpen]);
 
   const initials = useMemo(() => {
     const email = session?.user?.email ?? "";
@@ -26,8 +57,27 @@ export default function Header({ transparent = false }: { transparent?: boolean 
   }, [session]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/auth/login");
+    if (signingOut) return;
+    setSigningOut(true);
+    addToast("Signing out…", "info", 3000);
+
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Logout failed", error);
+        addToast(error.message, "error");
+        return;
+      }
+      addToast("Signed out successfully.", "success");
+      router.push("/auth/login");
+    } catch (err) {
+      console.error("Logout error", err);
+      const message = err instanceof Error ? err.message : "Unable to log out. Please try again.";
+      addToast(message, "error");
+    } finally {
+      setSigningOut(false);
+      setMenuOpen(false);
+    }
   };
 
   return (
@@ -64,16 +114,21 @@ export default function Header({ transparent = false }: { transparent?: boolean 
               </Link>
             </>
           ) : (
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button
                 type="button"
                 onClick={() => setMenuOpen((value) => !value)}
+                aria-expanded={menuOpen}
+                aria-haspopup="true"
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-stone-900 text-sm font-semibold text-white shadow-sm"
               >
                 {initials || "U"}
               </button>
               {menuOpen ? (
-                <div className="absolute right-0 mt-3 w-48 rounded-3xl border border-stone-200 bg-white p-4 shadow-xl">
+                <div className="absolute right-0 mt-3 w-48 rounded-3xl border border-stone-200 bg-white p-4 shadow-xl transition duration-200 ease-out"
+                  role="menu"
+                  aria-label="Account menu"
+                >
                   <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Account</p>
                   <p className="mt-3 text-sm font-semibold text-stone-900 truncate">{session.user.email}</p>
                   <div className="mt-4 space-y-2">
@@ -86,9 +141,10 @@ export default function Header({ transparent = false }: { transparent?: boolean 
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="w-full rounded-2xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white hover:bg-stone-800"
+                      disabled={signingOut}
+                      className="w-full rounded-2xl bg-stone-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Log out
+                      {signingOut ? "Signing out…" : "Log out"}
                     </button>
                   </div>
                 </div>

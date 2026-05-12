@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/components/SupabaseProvider";
+import { useToast } from "@/components/ToastProvider";
+import { withTimeout } from "@/lib/asyncUtils";
 import Header from "@/components/Header";
 
 export default function SignupPage() {
   const { supabase } = useSupabase();
   const router = useRouter();
+  const { addToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -17,45 +20,80 @@ export default function SignupPage() {
 
   const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (loading) return;
+
     setLoading(true);
     setMessage(null);
+    addToast("Creating your account…", "info", 3000);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const { data, error } = await withTimeout(
+        supabase.auth.signUp({
+          email,
+          password,
+        }),
+        20000,
+        "Signup request timed out"
+      );
 
       if (error) {
+        console.error("Signup failed", error);
         setMessage(error.message);
+        addToast(error.message, "error");
         return;
       }
 
       if (data.session) {
+        addToast("Account created successfully.", "success");
         router.push("/dashboard");
         return;
       }
 
       setMessage("Check your email to confirm your account.");
+      addToast("Check your email to confirm your account.", "success");
     } catch (err) {
-      setMessage("An unexpected error occurred. Please try again.");
+      console.error("Signup error", err);
+      const text = err instanceof Error ? err.message : "An unexpected error occurred. Please try again.";
+      setMessage(text);
+      addToast(text, "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogle = async () => {
+    if (loading) return;
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        queryParams: {
-          access_type: "offline",
-        },
-      },
-    });
-    setLoading(false);
-    if (error) setMessage(error.message);
+    setMessage(null);
+    addToast("Redirecting to Google sign in…", "info", 3000);
+
+    try {
+      const { error } = await withTimeout(
+        supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            queryParams: {
+              access_type: "offline",
+            },
+          },
+        }),
+        20000,
+        "Google signup timed out"
+      );
+
+      if (error) {
+        console.error("Google signup failed", error);
+        setMessage(error.message);
+        addToast(error.message, "error");
+      }
+    } catch (err) {
+      console.error("Google signup error", err);
+      const text = err instanceof Error ? err.message : "Google sign-in failed. Please try again.";
+      setMessage(text);
+      addToast(text, "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

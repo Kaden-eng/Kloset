@@ -2,6 +2,7 @@
 
 import { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
+import { withTimeout } from "@/lib/asyncUtils";
 
 type InventoryItem = Database["public"]["Tables"]["inventory_items"]["Row"];
 type InventoryItemInsert = Database["public"]["Tables"]["inventory_items"]["Insert"];
@@ -16,25 +17,56 @@ type SavedAnalysisInsert = Database["public"]["Tables"]["saved_analyses"]["Inser
 export class DatabaseService {
   constructor(private supabase: SupabaseClient<Database>) {}
 
+  private async execute<T>(request: Promise<T>, timeoutMs = 15000, label = "Supabase request"): Promise<T> {
+    console.debug(`[DatabaseService] ${label} starting with ${timeoutMs}ms timeout`);
+    try {
+      const result = await withTimeout(request, timeoutMs, `${label} timed out`);
+      console.debug(`[DatabaseService] ${label} completed successfully`);
+      return result;
+    } catch (error) {
+      console.error(`[DatabaseService] ${label} failed:`, error);
+      throw error;
+    }
+  }
+
   // Inventory Items
   async getInventoryItems(userId: string): Promise<InventoryItem[]> {
-    const { data, error } = await this.supabase
-      .from("inventory_items")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    console.debug(`[DatabaseService] Fetching inventory items for user: ${userId}`);
 
-    if (error) throw error;
+    const start = Date.now();
+    const { data, error } = await this.execute(
+      this.supabase
+        .from("inventory_items")
+        .select("id, user_id, item_name, brand, category, estimated_price, status, created_at, image_url")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(200),
+      15000,
+      "Load inventory items"
+    );
+
+    const duration = Date.now() - start;
+    console.debug(`[DatabaseService] Load inventory items completed in ${duration}ms, returned ${data?.length || 0} items`);
+
+    if (error) {
+      console.error(`[DatabaseService] Supabase error loading inventory:`, error);
+      throw error;
+    }
+
     return data || [];
   }
 
   async getInventoryItem(id: number, userId: string): Promise<InventoryItem | null> {
-    const { data, error } = await this.supabase
-      .from("inventory_items")
-      .select("*")
-      .eq("id", id)
-      .eq("user_id", userId)
-      .single();
+    const { data, error } = await this.execute(
+      this.supabase
+        .from("inventory_items")
+        .select("*")
+        .eq("id", id)
+        .eq("user_id", userId)
+        .single(),
+      15000,
+      "Load inventory item"
+    );
 
     if (error) {
       if (error.code === "PGRST116") return null; // Not found
@@ -44,57 +76,77 @@ export class DatabaseService {
   }
 
   async createInventoryItem(item: InventoryItemInsert): Promise<InventoryItem> {
-    const { data, error } = await (this.supabase as any)
-      .from("inventory_items")
-      .insert(item)
-      .select()
-      .single();
+    const { data, error } = await this.execute(
+      (this.supabase as any)
+        .from("inventory_items")
+        .insert(item)
+        .select()
+        .single(),
+      15000,
+      "Create inventory item"
+    );
 
     if (error) throw error;
     return data;
   }
 
   async updateInventoryItem(id: number, userId: string, updates: InventoryItemUpdate): Promise<InventoryItem> {
-    const { data, error } = await (this.supabase as any)
-      .from("inventory_items")
-      .update(updates)
-      .eq("id", id)
-      .eq("user_id", userId)
-      .select()
-      .single();
+    const { data, error } = await this.execute(
+      (this.supabase as any)
+        .from("inventory_items")
+        .update(updates)
+        .eq("id", id)
+        .eq("user_id", userId)
+        .select()
+        .single(),
+      15000,
+      "Update inventory item"
+    );
 
     if (error) throw error;
     return data;
   }
 
   async deleteInventoryItem(id: number, userId: string): Promise<void> {
-    const { error } = await this.supabase
-      .from("inventory_items")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", userId);
+    const { error } = await this.execute(
+      this.supabase
+        .from("inventory_items")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId),
+      15000,
+      "Delete inventory item"
+    );
 
     if (error) throw error;
   }
 
   // Marketplace Analytics
   async getMarketplaceAnalytics(inventoryItemId: number): Promise<MarketplaceAnalytics[]> {
-    const { data, error } = await this.supabase
-      .from("marketplace_analytics")
-      .select("*")
-      .eq("inventory_item_id", inventoryItemId)
-      .order("created_at", { ascending: false });
+    const { data, error } = await this.execute(
+      this.supabase
+        .from("marketplace_analytics")
+        .select("*")
+        .eq("inventory_item_id", inventoryItemId)
+        .order("created_at", { ascending: false }),
+      15000,
+      "Load marketplace analytics"
+    );
 
     if (error) throw error;
     return data || [];
   }
 
   async createMarketplaceAnalytics(analytics: MarketplaceAnalyticsInsert): Promise<MarketplaceAnalytics> {
-    const { data, error } = await (this.supabase as any)
-      .from("marketplace_analytics")
-      .insert(analytics)
-      .select()
-      .single();
+    const { data, error } = await this.execute(
+      (this.supabase as any)
+        .from("marketplace_analytics")
+        .insert(analytics)
+        .select()
+        .single(),
+      15000,
+      "Create marketplace analytics"
+    );
 
     if (error) throw error;
     return data;
@@ -130,42 +182,59 @@ export class DatabaseService {
   }
 
   async saveAnalysis(analysis: SavedAnalysisInsert): Promise<SavedAnalysis> {
-    const { data, error } = await (this.supabase as any)
-      .from("saved_analyses")
-      .insert(analysis)
-      .select()
-      .single();
+    const { data, error } = await this.execute(
+      (this.supabase as any)
+        .from("saved_analyses")
+        .insert(analysis)
+        .select()
+        .single(),
+      15000,
+      "Save analysis"
+    );
 
     if (error) throw error;
     return data;
   }
 
   async deleteSavedAnalysis(id: number, userId: string): Promise<void> {
-    const { error } = await this.supabase
-      .from("saved_analyses")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", userId);
+    const { error } = await this.execute(
+      this.supabase
+        .from("saved_analyses")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId),
+      15000,
+      "Delete saved analysis"
+    );
 
     if (error) throw error;
   }
 
   // File Upload
   async uploadInventoryImage(file: File, userId: string, fileName: string): Promise<string> {
+    console.debug("[DatabaseService] Uploading inventory image", { fileName, userId });
     const fileExt = file.name.split('.').pop();
     const filePath = `${userId}/${Date.now()}.${fileExt}`;
 
-    const { data, error } = await this.supabase.storage
-      .from('inventory-images')
-      .upload(filePath, file);
+    const { data, error } = await this.execute(
+      this.supabase.storage
+        .from('inventory-images')
+        .upload(filePath, file),
+      20000,
+      "Upload inventory image"
+    );
 
     if (error) throw error;
 
-    const { data: { publicUrl } } = this.supabase.storage
+    const publicUrlResponse = this.supabase.storage
       .from('inventory-images')
       .getPublicUrl(data.path);
 
-    return publicUrl;
+    if (!publicUrlResponse?.data?.publicUrl) {
+      throw new Error('Failed to get public URL for uploaded image');
+    }
+
+    return publicUrlResponse.data.publicUrl;
   }
 
   // Bulk operations
@@ -183,10 +252,14 @@ export class DatabaseService {
         inventory_item_id: createdItem.id
       }));
 
-      const { data, error } = await (this.supabase as any)
-        .from("marketplace_analytics")
-        .insert(analyticsWithItemId)
-        .select();
+      const { data, error } = await this.execute(
+        (this.supabase as any)
+          .from("marketplace_analytics")
+          .insert(analyticsWithItemId)
+          .select(),
+        15000,
+        "Create marketplace analytics batch"
+      );
 
       if (error) throw error;
       createdAnalytics = data || [];
@@ -221,9 +294,13 @@ export class DatabaseService {
       queryBuilder = queryBuilder.eq("status", status);
     }
 
-    const { data, error } = await queryBuilder
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+    const { data, error } = await this.execute(
+      queryBuilder
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1),
+      15000,
+      "Search inventory items"
+    );
 
     if (error) throw error;
     return data || [];
@@ -237,10 +314,14 @@ export class DatabaseService {
     sold: number;
     totalValue: number;
   }> {
-    const { data, error } = await (this.supabase as any)
-      .from("inventory_items")
-      .select("status, estimated_price")
-      .eq("user_id", userId);
+    const { data, error } = await this.execute(
+      (this.supabase as any)
+        .from("inventory_items")
+        .select("status, estimated_price")
+        .eq("user_id", userId),
+      15000,
+      "Load inventory stats"
+    );
 
     if (error) throw error;
 
