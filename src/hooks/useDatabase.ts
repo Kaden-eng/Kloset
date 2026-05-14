@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSupabase } from "@/components/SupabaseProvider";
 import { DatabaseService } from "@/lib/database";
 import type { Database } from "@/types/supabase";
@@ -25,7 +25,7 @@ export function useInventoryItems() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryTrigger, setRetryTrigger] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const loadRef = useRef(false);
 
   const loadItems = useCallback(async () => {
     if (!session?.user?.id) {
@@ -34,14 +34,14 @@ export function useInventoryItems() {
       return;
     }
 
-    if (isLoading) {
+    if (loadRef.current) {
       console.debug("[useInventoryItems] Load already in progress, skipping");
       return;
     }
 
+    loadRef.current = true;
     try {
       console.debug("[useInventoryItems] Starting inventory load for user:", session.user.id);
-      setIsLoading(true);
       setLoading(true);
       setError(null);
 
@@ -54,9 +54,9 @@ export function useInventoryItems() {
       setError(message);
     } finally {
       setLoading(false);
-      setIsLoading(false);
+      loadRef.current = false;
     }
-  }, [db, session?.user?.id, isLoading]);
+  }, [db, session?.user?.id]);
 
   useEffect(() => {
     loadItems();

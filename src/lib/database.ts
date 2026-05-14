@@ -17,10 +17,14 @@ type SavedAnalysisInsert = Database["public"]["Tables"]["saved_analyses"]["Inser
 export class DatabaseService {
   constructor(private supabase: SupabaseClient<Database>) {}
 
-  private async execute<T>(request: Promise<T>, timeoutMs = 15000, label = "Supabase request"): Promise<T> {
+  private async execute<T extends { data: any; error: any }>(
+    request: any,
+    timeoutMs = 15000,
+    label = "Supabase request"
+  ): Promise<T> {
     console.debug(`[DatabaseService] ${label} starting with ${timeoutMs}ms timeout`);
     try {
-      const result = await withTimeout(request, timeoutMs, `${label} timed out`);
+      const result = await withTimeout(request, timeoutMs, `${label} timed out`) as T;
       console.debug(`[DatabaseService] ${label} completed successfully`);
       return result;
     } catch (error) {
