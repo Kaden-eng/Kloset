@@ -1660,3 +1660,6 @@
  GET /overview 200 in 515ms (next.js: 335ms, application-code: 180ms)
  GET /auth/login 200 in 126ms (next.js: 7ms, application-code: 119ms)
  GET /overview 200 in 126ms (next.js: 52ms, application-code: 74ms)
+ GET /overview 200 in 211ms (next.js: 4ms, application-code: 207ms)
+[browser] GoTrueClient@sb-osvkplbscdntetfhyqnu-auth-token:1 (2.105.4) 2026-05-15T04:36:47.438Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. (src/lib/supabaseClient.ts:7:15)
+[?25h
