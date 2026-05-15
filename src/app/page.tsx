@@ -18,49 +18,53 @@ const features = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900">
+    <div className="min-h-screen bg-stone-950 text-white">
       <Header transparent />
 
       <main className="relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-96 bg-gradient-to-b from-white to-transparent" />
-
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.06),_transparent_28%)]" />
         <section className="relative px-6 pt-28 pb-20 lg:px-8">
           <div className="mx-auto max-w-6xl">
-            <div className="grid gap-16 lg:grid-cols-[0.95fr_0.65fr] lg:items-end">
-              <div>
-                <p className="text-xs uppercase tracking-[0.32em] text-stone-500">Luxury resale workspace</p>
-                <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-tight text-stone-900 sm:text-6xl">
-                  Kloset is the premium resale platform for authenticated sellers.
-                </h1>
-                <p className="mt-8 max-w-2xl text-lg leading-8 text-stone-600">
-                  Move beyond demo dashboards with real user accounts, persistent inventory, and data-driven listing workflows powered by Supabase.
-                </p>
-                <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-full bg-stone-900 px-8 py-4 text-sm font-semibold text-white transition hover:bg-stone-800">
-                    Start free trial
-                  </Link>
-                  <Link href="/auth/login" className="inline-flex items-center justify-center rounded-full border border-stone-900 bg-white px-8 py-4 text-sm font-semibold text-stone-900 transition hover:bg-stone-100">
-                    Sign in
-                  </Link>
+            <div className="grid gap-12 lg:grid-cols-[0.95fr_0.65fr] lg:items-end">
+              <div className="space-y-8">
+                <div className="max-w-xl rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_32px_80px_-48px_rgba(255,255,255,0.15)] backdrop-blur-xl">
+                  <p className="text-[11px] uppercase tracking-[0.4em] text-stone-400">Streetwear resale, sharpened</p>
+                  <h1 className="mt-5 text-5xl font-black uppercase tracking-[-0.05em] text-white sm:text-6xl">
+                    Kloset is the resale platform serious streetwear sellers actually want.
+                  </h1>
+                  <p className="mt-6 max-w-2xl text-base leading-8 text-stone-300 sm:text-lg">
+                    A premium resale workspace rooted in skate culture, editorial energy, and fast-moving market intelligence.
+                  </p>
+                  <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-sm font-semibold text-stone-950 transition hover:bg-stone-100">
+                      Start your drop
+                    </Link>
+                    <Link href="/auth/login" className="inline-flex items-center justify-center rounded-full border border-white/10 bg-transparent px-8 py-4 text-sm font-semibold text-white transition hover:bg-white/5">
+                      Sign in
+                    </Link>
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-stone-200 bg-white p-10 shadow-2xl">
-                <div className="text-sm uppercase tracking-[0.28em] text-stone-500">Workspace preview</div>
-                <div className="mt-8 grid gap-6">
-                  <div className="rounded-4xl border border-stone-200 bg-stone-50 p-6">
-                    <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Session backed</p>
-                    <h2 className="mt-3 text-xl font-semibold text-stone-900">Personalized account modules</h2>
-                    <p className="mt-3 text-sm leading-6 text-stone-600">
-                      Each user retains their saved inventory, upload history, and AI analysis details across refreshes.
-                    </p>
-                  </div>
-                  <div className="rounded-4xl border border-stone-200 bg-stone-50 p-6">
-                    <p className="text-xs uppercase tracking-[0.28em] text-stone-500">AI resale insights</p>
-                    <h2 className="mt-3 text-xl font-semibold text-stone-900">Machine-backed pricing</h2>
-                    <p className="mt-3 text-sm leading-6 text-stone-600">
-                      Upload a product image, analyze demand, and receive marketplace recommendations instantly.
-                    </p>
+              <div className="relative rounded-[2rem] border border-white/10 bg-black/70 p-8 shadow-[0_50px_120px_-60px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+                <div className="absolute -left-12 top-8 h-20 w-20 rounded-full border border-white/10 bg-white/5 blur-xl" />
+                <div className="relative space-y-6">
+                  <div className="text-xs uppercase tracking-[0.32em] text-stone-400">Kloset preview</div>
+                  <div className="grid gap-4 rounded-[1.75rem] border border-white/10 bg-stone-950/80 p-6 shadow-inner">
+                    <div className="rounded-3xl bg-white/5 p-5">
+                      <p className="text-[11px] uppercase tracking-[0.32em] text-stone-400">Persisted work</p>
+                      <h2 className="mt-3 text-xl font-semibold text-white">Inventory built to move</h2>
+                      <p className="mt-3 text-sm leading-6 text-stone-400">
+                        Keep buy lists, price notes, and product mood boards in one clean workspace.
+                      </p>
+                    </div>
+                    <div className="rounded-3xl bg-white/5 p-5">
+                      <p className="text-[11px] uppercase tracking-[0.32em] text-stone-400">Market pulse</p>
+                      <h2 className="mt-3 text-xl font-semibold text-white">Intelligence that feels alive</h2>
+                      <p className="mt-3 text-sm leading-6 text-stone-400">
+                        Get pricing insights with the confidence of skate, street, and collector culture.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -70,32 +74,32 @@ export default function HomePage() {
 
         <section className="px-6 pb-24 lg:px-8">
           <div className="mx-auto max-w-6xl">
-            <div className="grid gap-8 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3">
               {features.map((feature) => (
-                <div key={feature.title} className="rounded-4xl border border-stone-200 bg-white p-8 shadow-sm transition hover:shadow-lg">
-                  <h3 className="text-xl font-semibold text-stone-900">{feature.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-stone-600">{feature.description}</p>
+                <div key={feature.title} className="rounded-[1.75rem] border border-white/10 bg-white/5 p-8 shadow-[0_20px_60px_-40px_rgba(255,255,255,0.12)] transition hover:-translate-y-1 hover:border-white/20 hover:bg-white/10">
+                  <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
+                  <p className="mt-4 text-sm leading-7 text-stone-300">{feature.description}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-16 rounded-[2rem] border border-stone-200 bg-stone-950 p-10 text-white shadow-2xl">
+            <div className="mt-16 rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_32px_80px_-44px_rgba(255,255,255,0.12)]">
               <div className="grid gap-8 lg:grid-cols-2">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.32em] text-stone-400">Scalable SaaS design</p>
-                  <h2 className="mt-4 text-3xl font-semibold tracking-tight">Built as a startup platform, not a prototype.</h2>
+                  <p className="text-xs uppercase tracking-[0.32em] text-stone-400">Resale flow, elevated</p>
+                  <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">Built for street sellers, not spreadsheets.</h2>
                   <p className="mt-5 text-sm leading-7 text-stone-300">
-                    Modular auth, protected routes, reusable components, and a real database structure ready for production.
+                    Clean auth, protected inventory, and a real data stack designed to support hustle, not bookkeeping.
                   </p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-3xl bg-white/5 p-6">
+                  <div className="rounded-3xl bg-black/70 p-6">
                     <p className="text-sm font-semibold uppercase tracking-[0.24em] text-stone-300">Persistent inventory</p>
-                    <p className="mt-3 text-sm text-stone-300">Saved items survive refreshes and live in your Supabase database.</p>
+                    <p className="mt-3 text-sm text-stone-300">Items stay synced to your account so your listings are always ready to post.</p>
                   </div>
-                  <div className="rounded-3xl bg-white/5 p-6">
+                  <div className="rounded-3xl bg-black/70 p-6">
                     <p className="text-sm font-semibold uppercase tracking-[0.24em] text-stone-300">Protected dashboard</p>
-                    <p className="mt-3 text-sm text-stone-300">User sessions guard the dashboard and inventory pages.</p>
+                    <p className="mt-3 text-sm text-stone-300">Session-backed pages keep your resale flow locked and clean.</p>
                   </div>
                 </div>
               </div>

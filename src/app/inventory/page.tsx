@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState, useRef } from "react";
+import { Fragment, useMemo, useState, useRef, useEffect } from "react";
 import Header from "@/components/Header";
 import ProtectedPage from "@/components/ProtectedPage";
 import { useInventoryItems, useDatabase } from "@/hooks/useDatabase";
@@ -144,12 +144,12 @@ const MarketplacePricingIntelligence = ({
   }, [platformData, pricingBias]);
 
   return (
-    <div className="rounded-4xl border border-stone-200 bg-white p-5 shadow-sm transition hover:border-stone-300 hover:shadow-lg">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div className="rounded-4xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300 hover:shadow-lg">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Market pricing intelligence</p>
-          <h4 className="mt-3 text-lg font-semibold text-stone-900">Cross-market insight</h4>
-          <p className="mt-2 text-sm text-stone-600">Real-time resale pricing intelligence across Grailed, eBay, Depop, StockX, GOAT, Vestiaire, The RealReal, and Poshmark.</p>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Market pricing intelligence</p>
+          <h4 className="mt-2 text-lg font-semibold text-stone-900">Cross-market insight</h4>
+          <p className="mt-1 text-sm text-stone-600">Resale pricing across major platforms with compact marketplace signals.</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-stone-900 shadow-sm">
@@ -171,12 +171,12 @@ const MarketplacePricingIntelligence = ({
         </div>
       </div>
 
-      <div className="mt-6 rounded-4xl border border-stone-100 bg-stone-50 p-4">
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-stone-600">Pricing strategy</p>
-          <p className="text-sm font-medium text-stone-700">{pricingBias < 50 ? "Sell Fast" : pricingBias > 50 ? "Max Profit" : "Balanced"}</p>
+      <div className="mt-4 rounded-4xl border border-stone-100 bg-stone-50 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-600">Pricing strategy</p>
+          <p className="text-xs font-medium text-stone-700">{pricingBias < 50 ? "Sell Fast" : pricingBias > 50 ? "Max Profit" : "Balanced"}</p>
         </div>
-        <div className="mt-4">
+        <div className="mt-3">
           <input
             type="range"
             min={0}
@@ -185,21 +185,21 @@ const MarketplacePricingIntelligence = ({
             onChange={(event) => setPricingBias(Number(event.target.value))}
             className="w-full appearance-none rounded-full bg-stone-200 h-2 accent-stone-900"
           />
-          <div className="mt-3 flex items-center justify-between text-xs text-stone-500">
+          <div className="mt-2 flex items-center justify-between text-[11px] text-stone-500">
             <span>Sell Fast</span>
             <span>Max Profit</span>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
         {platformData.map((row) => (
-          <div key={row.platform} className="rounded-4xl border border-stone-200 bg-white p-4 text-stone-900 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-semibold uppercase tracking-[0.24em] text-stone-600">{row.platform}</span>
-              <span className="text-xs uppercase tracking-[0.2em] text-stone-500">{item.brand || item.category || "Design"}</span>
+          <div key={row.platform} className="rounded-4xl border border-stone-200 bg-white p-3 text-stone-900 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-600">{row.platform}</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500">{item.brand || item.category || "Design"}</span>
             </div>
-            <div className="mt-4 grid gap-2 text-sm text-stone-700">
+            <div className="mt-3 grid gap-2 text-xs text-stone-700">
               <div className="flex items-center justify-between">
                 <span>Low</span>
                 <span>${row.low.toLocaleString()}</span>
@@ -213,7 +213,7 @@ const MarketplacePricingIntelligence = ({
                 <span>${row.high.toLocaleString()}</span>
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-3 flex items-center gap-2">
               {row.trend.map((value, idx) => (
                 <div key={idx} className="h-2 rounded-full bg-white/15 transition-all duration-300" style={{ width: `${value}%` }} />
               ))}
@@ -247,7 +247,9 @@ export default function InventoryPage() {
   const [generatedBrand, setGeneratedBrand] = useState("");
   const [generatedPrice, setGeneratedPrice] = useState<number | "">("");
   const [generatedCondition, setGeneratedCondition] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const analysisReady = Boolean(analysisResult && !analysisLoading);
 
   const filteredInventory = useMemo(() => {
@@ -358,6 +360,20 @@ export default function InventoryPage() {
     setGeneratedCondition("");
     generateAnalysis(file);
   };
+
+  const openCameraCapture = () => {
+    cameraInputRef.current?.click();
+  };
+
+  const openGalleryUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined') return;
+    const mobileRegex = /Mobi|Android|iPhone|iPad|iPod|webOS|BlackBerry|Opera Mini/i;
+    setIsMobile(mobileRegex.test(navigator.userAgent) || navigator.maxTouchPoints > 1);
+  }, []);
 
   const handleUpload = async () => {
     if (!selectedFile || !session?.user?.id) {
@@ -526,32 +542,32 @@ export default function InventoryPage() {
     <ProtectedPage>
       <div className="min-h-screen bg-stone-50 text-stone-900">
         <Header />
-        <main className="px-6 py-20 lg:px-12">
+        <main className="px-6 py-12 lg:px-10">
           <div className="mx-auto max-w-7xl">
             {/* Hero Section */}
-            <section className="mb-16">
-              <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Resale workspace</p>
-              <h1 className="mt-6 text-4xl font-semibold text-stone-900">Professional inventory management</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-600">
+            <section className="mb-10">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500">Resale workspace</p>
+              <h1 className="mt-4 text-3xl font-semibold text-stone-900">Professional inventory management</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-600">
                 Advanced reseller platform with AI-powered pricing, marketplace insights, and real-time inventory tracking.
               </p>
             </section>
 
             {/* Statistics Dashboard */}
-            <section className="mb-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-              <div className="rounded-4xl border border-stone-200 bg-white p-6">
-                <p className="text-xs uppercase tracking-[0.24em] text-stone-500">Total items</p>
-                <p className="mt-4 text-4xl font-semibold text-stone-900">{inventory.length}</p>
+            <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="rounded-4xl border border-stone-200 bg-white p-4">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Total items</p>
+                <p className="mt-3 text-3xl font-semibold text-stone-900">{inventory.length}</p>
                 <p className="mt-2 text-xs text-stone-500">In your inventory</p>
               </div>
-              <div className="rounded-4xl border border-stone-200 bg-white p-6">
-                <p className="text-xs uppercase tracking-[0.24em] text-stone-500">Total value</p>
-                <p className="mt-4 text-3xl font-semibold text-stone-900">${(stats.totalValue / 1000).toFixed(1)}k</p>
+              <div className="rounded-4xl border border-stone-200 bg-white p-4">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Total value</p>
+                <p className="mt-3 text-3xl font-semibold text-stone-900">${(stats.totalValue / 1000).toFixed(1)}k</p>
                 <p className="mt-2 text-xs text-stone-500">Estimated portfolio</p>
               </div>
-              <div className="rounded-4xl border border-stone-200 bg-white p-6">
-                <p className="text-xs uppercase tracking-[0.24em] text-stone-500">Active listings</p>
-                <p className="mt-4 text-4xl font-semibold text-stone-900">{stats.listed.length}</p>
+              <div className="rounded-4xl border border-stone-200 bg-white p-4">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Active listings</p>
+                <p className="mt-3 text-3xl font-semibold text-stone-900">{stats.listed.length}</p>
                 <p className="mt-2 text-xs text-stone-500">${(stats.listedValue / 1000).toFixed(1)}k value</p>
               </div>
               <div className="rounded-4xl border border-stone-200 bg-white p-6">
@@ -567,13 +583,13 @@ export default function InventoryPage() {
             </section>
 
             {/* Upload + Quick Actions Section */}
-            <section className="mb-16 grid gap-6 lg:grid-cols-2">
-              <div className="rounded-4xl border border-stone-200 bg-white p-8">
-                <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Upload new item</p>
-                <h2 className="mt-3 text-xl font-semibold text-stone-900">Add to inventory</h2>
-                <p className="mt-3 text-sm text-stone-600">Use intelligent analysis to estimate price, condition, and demand.</p>
-                <div className="mt-5 flex flex-col gap-3">
-                  <label className={`rounded-3xl border-2 border-dashed border-stone-200 bg-stone-50 px-6 py-7 text-center transition cursor-pointer ${
+            <section className="mb-10 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="rounded-4xl border border-stone-200 bg-white p-6">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Upload new item</p>
+                <h2 className="mt-2 text-xl font-semibold text-stone-900">Add to inventory</h2>
+                <p className="mt-2 text-sm text-stone-600">Use intelligent analysis to estimate price, condition, and demand.</p>
+                <div className="mt-4 flex flex-col gap-3">
+                  <label className={`rounded-3xl border-2 border-dashed border-stone-200 bg-stone-50 px-5 py-6 text-center transition cursor-pointer ${
                     uploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-stone-300 hover:bg-stone-100'
                   }`}>
                     <input
@@ -584,20 +600,47 @@ export default function InventoryPage() {
                       disabled={uploading}
                       className="hidden"
                     />
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileSelect}
+                      disabled={uploading}
+                      className="hidden"
+                    />
                     <svg className="mx-auto h-8 w-8 text-stone-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                     </svg>
-                    <p className="mt-2 text-sm font-semibold text-stone-900">{uploading ? 'Processing...' : 'Click to upload or drag'}</p>
+                    <p className="mt-2 text-sm font-semibold text-stone-900">{uploading ? 'Processing...' : isMobile ? 'Tap to upload or take a photo' : 'Click to upload or drag'}</p>
                     <p className="text-xs text-stone-500">PNG, JPG up to 10MB</p>
                   </label>
+                  {isMobile && !uploading && (
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={openCameraCapture}
+                        className="w-full rounded-3xl bg-stone-900 px-4 py-4 text-sm font-semibold text-white transition hover:bg-stone-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-stone-900"
+                      >
+                        Take Photo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={openGalleryUpload}
+                        className="w-full rounded-3xl border border-stone-200 bg-white px-4 py-4 text-sm font-semibold text-stone-900 transition hover:bg-stone-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-stone-900"
+                      >
+                        Upload from Gallery
+                      </button>
+                    </div>
+                  )}
                   {uploading && (
                     <div className="rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600">
                       {uploadProgress}
                     </div>
                   )}
                   {previewUrl && !uploading && (
-                    <div className="mt-4 space-y-5">
-                      <div className="grid gap-4 items-start lg:grid-cols-[1.3fr_0.95fr]">
+                    <div className="mt-3 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+                      <div className="grid gap-4">
                         <div className="overflow-hidden rounded-4xl border border-stone-200 bg-stone-100 shadow-sm">
                           <div className="aspect-[5/4] overflow-hidden">
                             <img
@@ -612,140 +655,158 @@ export default function InventoryPage() {
                           </div>
                         </div>
 
-                        <div className="rounded-4xl border border-stone-200 bg-white p-5 shadow-sm">
-                          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div className="rounded-4xl border border-stone-200 bg-white p-4 shadow-sm">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                              <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Suggested listing</p>
-                              <h3 className="mt-2 text-xl font-semibold text-stone-900">Listing details</h3>
+                              <p className="text-[10px] uppercase tracking-[0.18em] text-stone-500">Suggested listing</p>
+                              <h3 className="mt-1 text-lg font-semibold text-stone-900">Listing metrics</h3>
                             </div>
-                            <span className="rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-xs uppercase tracking-[0.2em] text-stone-600">
+                            <span className="rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-[11px] uppercase tracking-[0.15em] text-stone-600">
                               {analysisLoading ? 'Preparing' : analysisReady ? 'Ready to review' : 'Waiting'}
                             </span>
                           </div>
 
                           {analysisReady && analysisResult && (
-                            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                              <div className="rounded-3xl bg-stone-50 px-3 py-3 text-xs text-stone-700 shadow-sm">
-                                <p className="uppercase tracking-[0.28em] text-stone-500">Confidence</p>
-                                <p className="mt-2 text-base font-semibold text-stone-900">{analysisResult.confidence_score}%</p>
+                            <div className="mt-3 grid gap-3 grid-cols-1 sm:grid-cols-2">
+                              <div className="min-w-0 rounded-3xl bg-stone-50 px-3 py-3 shadow-sm">
+                                <div className="flex flex-col justify-between gap-1">
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Brand confidence</p>
+                                  <p className="text-lg font-semibold text-stone-900 break-words">{analysisResult.brand_confidence}%</p>
+                                </div>
                               </div>
-                              <div className="rounded-3xl bg-stone-50 px-3 py-3 text-xs text-stone-700 shadow-sm">
-                                <p className="uppercase tracking-[0.28em] text-stone-500">Demand</p>
-                                <p className="mt-2 text-base font-semibold text-stone-900">{analysisResult.market_demand}</p>
+                              <div className="min-w-0 rounded-3xl bg-stone-50 px-3 py-3 shadow-sm">
+                                <div className="flex flex-col justify-between gap-1">
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">AI confidence</p>
+                                  <p className="text-lg font-semibold text-stone-900 break-words">{analysisResult.confidence_score}%</p>
+                                </div>
                               </div>
-                              <div className="rounded-3xl bg-stone-50 px-3 py-3 text-xs text-stone-700 shadow-sm">
-                                <p className="uppercase tracking-[0.28em] text-stone-500">Sell-through</p>
-                                <p className="mt-2 text-base font-semibold text-stone-900">{analysisResult.sell_through_estimate}</p>
+                              <div className="min-w-0 rounded-3xl bg-stone-50 px-3 py-3 shadow-sm">
+                                <div className="flex flex-col justify-between gap-1">
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Demand</p>
+                                  <p className="text-lg font-semibold text-stone-900 break-words">{analysisResult.market_demand}</p>
+                                </div>
+                              </div>
+                              <div className="min-w-0 rounded-3xl bg-stone-50 px-3 py-3 shadow-sm">
+                                <div className="flex flex-col justify-between gap-1">
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Sell-through</p>
+                                  <p className="text-lg font-semibold text-stone-900 break-words">{analysisResult.sell_through_estimate}</p>
+                                </div>
                               </div>
                             </div>
                           )}
-
-                          <div className="mt-6 space-y-4">
-                            {analysisLoading ? (
-                              <AIAnalysisSkeleton />
-                            ) : analysisReady ? (
-                              <div className="space-y-4">
-                                <label className="block text-sm font-semibold text-stone-800">Title</label>
-                                <input
-                                  value={generatedTitle}
-                                  onChange={(event) => setGeneratedTitle(event.target.value)}
-                                  className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
-                                />
-
-                                <label className="block text-sm font-semibold text-stone-800">Description</label>
-                                <textarea
-                                  value={generatedDescription}
-                                  onChange={(event) => setGeneratedDescription(event.target.value)}
-                                  rows={4}
-                                  className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
-                                />
-
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                  <div>
-                                    <label className="block text-sm font-semibold text-stone-800">Category</label>
-                                    <input
-                                      value={generatedCategory}
-                                      onChange={(event) => setGeneratedCategory(event.target.value)}
-                                      className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-semibold text-stone-800">Brand</label>
-                                    <input
-                                      value={generatedBrand}
-                                      onChange={(event) => setGeneratedBrand(event.target.value)}
-                                      className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                  <div>
-                                    <label className="block text-sm font-semibold text-stone-800">Recommended price</label>
-                                    <div className="relative">
-                                      <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-stone-500">$</span>
-                                      <input
-                                        type="number"
-                                        value={generatedPrice}
-                                        onChange={(event) => setGeneratedPrice(Number(event.target.value))}
-                                        className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 pl-10 text-sm text-stone-900 outline-none transition focus:border-stone-900"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-semibold text-stone-800">Condition</label>
-                                    <input
-                                      value={generatedCondition}
-                                      onChange={(event) => setGeneratedCondition(event.target.value)}
-                                      className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
-                                    />
-                                  </div>
-                                </div>
-
-                                {analysisResult && (
-                                  <div className="rounded-3xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-600">
-                                    <p className="font-semibold text-stone-900">Pricing guide</p>
-                                    <p className="mt-2">Range ${analysisResult.price_low.toLocaleString()} – ${analysisResult.price_high.toLocaleString()}</p>
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="rounded-4xl border border-dashed border-stone-200 bg-stone-50 p-6 text-sm text-stone-600">
-                                <p className="font-medium text-stone-900">Your suggested listing appears here after image upload.</p>
-                                <p className="mt-2">Upload a polished item image and let the system propose refined copy and pricing for resale.</p>
-                              </div>
-                            )}
-                          </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-3">
-                        <div className="rounded-4xl border border-stone-200 bg-white/90 px-5 py-4 text-stone-900 shadow-sm">
-                          <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Workflow</p>
-                          <div className="mt-3 space-y-1 text-sm leading-6 text-stone-600">
-                            <p>1. Upload your item image.</p>
-                            <p>2. Review the suggested title, description, and pricing.</p>
-                            <p>3. Edit, then save the listing.</p>
+                      <div className="grid gap-4">
+                        <div className="rounded-4xl border border-stone-200 bg-white p-4 shadow-sm">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.18em] text-stone-500">Listing details</p>
+                              <h3 className="mt-1 text-lg font-semibold text-stone-900">Refine item</h3>
+                            </div>
+                            <span className="rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-[11px] uppercase tracking-[0.15em] text-stone-600">
+                              {analysisReady ? 'Ready' : analysisLoading ? 'Analyzing' : 'Waiting'}
+                            </span>
+                          </div>
+
+                          <div className="mt-4 grid gap-3">
+                            <div>
+                              <label className="block text-sm font-semibold text-stone-800">Title</label>
+                              <input
+                                value={generatedTitle}
+                                onChange={(event) => setGeneratedTitle(event.target.value)}
+                                className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-stone-800">Description</label>
+                              <textarea
+                                value={generatedDescription}
+                                onChange={(event) => setGeneratedDescription(event.target.value)}
+                                rows={3}
+                                className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                              />
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div>
+                                <label className="block text-sm font-semibold text-stone-800">Category</label>
+                                <input
+                                  value={generatedCategory}
+                                  onChange={(event) => setGeneratedCategory(event.target.value)}
+                                  className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-semibold text-stone-800">Brand</label>
+                                <input
+                                  value={generatedBrand}
+                                  onChange={(event) => setGeneratedBrand(event.target.value)}
+                                  className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div>
+                                <label className="block text-sm font-semibold text-stone-800">Recommended price</label>
+                                <div className="relative">
+                                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-stone-500">$</span>
+                                  <input
+                                    type="number"
+                                    value={generatedPrice}
+                                    onChange={(event) => setGeneratedPrice(Number(event.target.value))}
+                                    className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 pl-9 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-semibold text-stone-800">Condition</label>
+                                <input
+                                  value={generatedCondition}
+                                  onChange={(event) => setGeneratedCondition(event.target.value)}
+                                  className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <button
-                            onClick={handleUpload}
-                            disabled={!analysisReady || uploading}
-                            className="rounded-3xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {uploading ? 'Saving listing...' : 'Save listing'}
-                          </button>
-                          <button
-                            onClick={cancelUpload}
-                            className="rounded-3xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-900 transition hover:bg-stone-50"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                        <div className="rounded-4xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600">
-                          <p className="font-medium">Tip</p>
-                          <p className="mt-2">Use the generated title and price as a premium baseline, then refine the description to match your brand voice.</p>
+
+                        <div className="rounded-4xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-600 shadow-sm">
+                          <div className="grid gap-2">
+                            <div className="flex items-center justify-between">
+                              <span>Low estimate</span>
+                              <span>${analysisResult?.price_low?.toLocaleString() || '--'}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span>Average estimate</span>
+                              <span>${analysisResult?.price_average?.toLocaleString() || '--'}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span>High estimate</span>
+                              <span>${analysisResult?.price_high?.toLocaleString() || '--'}</span>
+                            </div>
+                            <div className="flex items-center justify-between border-t border-stone-200 pt-3">
+                              <span className="font-medium">Quick sale</span>
+                              <span className="font-semibold text-stone-900">${analysisResult?.recommended_quick_sale?.toLocaleString() || '--'}</span>
+                            </div>
+                          </div>
+                          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            <button
+                              onClick={handleUpload}
+                              disabled={!analysisReady || uploading}
+                              className="rounded-3xl bg-stone-900 px-3 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {uploading ? 'Saving...' : 'Save'}
+                            </button>
+                            <button
+                              onClick={cancelUpload}
+                              className="rounded-3xl border border-stone-200 bg-white px-3 py-3 text-sm font-semibold text-stone-900 transition hover:bg-stone-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                          <p className="mt-3 text-xs text-stone-500">
+                            Use the generated title and price as a premium baseline, then refine the description to match your brand voice.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -753,10 +814,10 @@ export default function InventoryPage() {
                 </div>
               </div>
 
-              <div className="rounded-4xl border border-stone-200 bg-white p-8">
-                <p className="text-xs uppercase tracking-[0.28em] text-stone-500">Portfolio snapshot</p>
-                <h2 className="mt-3 text-xl font-semibold text-stone-900">Your resale metrics</h2>
-                <div className="mt-6 space-y-4">
+              <div className="rounded-4xl border border-stone-200 bg-white p-5">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Portfolio snapshot</p>
+                <h2 className="mt-2 text-xl font-semibold text-stone-900">Your resale metrics</h2>
+                <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3">
                     <span className="text-sm text-stone-600">Trending category</span>
                     <span className="font-semibold text-stone-900">{stats.trendingCategory}</span>
@@ -774,8 +835,8 @@ export default function InventoryPage() {
             </section>
 
             {/* Filter Toolbar */}
-            <section className="mb-8 rounded-4xl border border-stone-200 bg-white p-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <section className="mb-6 rounded-4xl border border-stone-200 bg-white p-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1">
                   <label className="sr-only" htmlFor="inventory-search-toolbar">Search inventory</label>
                   <input
@@ -829,32 +890,32 @@ export default function InventoryPage() {
                 </div>
               </div>
               {filteredInventory.length > 0 && (
-                <p className="mt-4 text-xs text-stone-500">Showing {filteredInventory.length} of {inventory.length} items</p>
+                <p className="mt-3 text-xs text-stone-500">Showing {filteredInventory.length} of {inventory.length} items</p>
               )}
             </section>
 
             {/* Inventory Display */}
             <section>
               {loading ? (
-                <div className="rounded-4xl border border-dashed border-stone-200 bg-stone-50 p-16 text-center">
+                <div className="rounded-4xl border border-dashed border-stone-200 bg-stone-50 p-10 text-center">
                   <p className="text-stone-500">Loading your inventory...</p>
                 </div>
               ) : error ? (
-                <div className="rounded-4xl border border-red-200 bg-red-50 p-16 text-center text-red-700">
+                <div className="rounded-4xl border border-red-200 bg-red-50 p-10 text-center text-red-700">
                   <p className="font-semibold">Error loading inventory</p>
                   <p className="mt-3 text-sm text-red-700">{error}</p>
                   <button
                     type="button"
                     onClick={refresh}
-                    className="mt-6 inline-flex items-center justify-center rounded-3xl border border-red-300 bg-white px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                    className="mt-4 inline-flex items-center justify-center rounded-3xl border border-red-300 bg-white px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
                   >
                     Retry loading inventory
                   </button>
                 </div>
               ) : filteredInventory.length === 0 && inventory.length === 0 ? (
-                <div className="rounded-4xl border border-dashed border-stone-200 bg-gradient-to-br from-stone-50 to-stone-100 p-20 text-center">
+                <div className="rounded-4xl border border-dashed border-stone-200 bg-gradient-to-br from-stone-50 to-stone-100 p-14 text-center">
                   <div className="mx-auto max-w-md">
-                    <div className="mx-auto h-20 w-20 text-stone-400 mb-6">
+                    <div className="mx-auto h-16 w-16 text-stone-400 mb-4">
                       <svg fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                       </svg>
@@ -875,7 +936,7 @@ export default function InventoryPage() {
                   </div>
                 </div>
               ) : filteredInventory.length === 0 ? (
-                <div className="rounded-4xl border border-dashed border-stone-200 bg-stone-50 p-16 text-center">
+                <div className="rounded-4xl border border-dashed border-stone-200 bg-stone-50 p-10 text-center">
                   <div className="mx-auto max-w-sm">
                     <div className="mx-auto h-12 w-12 text-stone-300 mb-4">
                       <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -887,7 +948,7 @@ export default function InventoryPage() {
                   </div>
                 </div>
               ) : view === "grid" ? (
-                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredInventory.map((item) => (
                     <article key={item.id} className="group relative flex flex-col rounded-4xl border border-stone-200 bg-white overflow-hidden transition-all duration-300 hover:border-stone-300 hover:shadow-2xl hover:shadow-stone-900/10 hover:-translate-y-1">
                       <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
