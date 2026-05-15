@@ -34,14 +34,14 @@ const InventoryCardSkeleton = () => (
 
 const StatsCardSkeleton = () => (
   <div className="animate-pulse rounded-3xl border border-stone-200 bg-white p-6">
-    <div className="h-3 w-20 rounded-full bg-stone-200 mb-4"></div>
-    <div className="h-8 w-12 rounded-full bg-stone-200 mb-2"></div>
+    <div className="mb-4 h-3 w-20 rounded-full bg-stone-200"></div>
+    <div className="mb-2 h-8 w-12 rounded-full bg-stone-200"></div>
     <div className="h-3 w-24 rounded-full bg-stone-200"></div>
   </div>
 );
 
 const AIAnalysisSkeleton = () => (
-  <div className="rounded-4xl border border-stone-200 bg-stone-50 p-6 animate-pulse">
+  <div className="animate-pulse rounded-3xl border border-stone-200 bg-stone-50 p-6">
     <div className="mb-6 h-5 w-3/4 rounded-full bg-stone-200"></div>
     <div className="grid gap-4 md:grid-cols-2">
       <div className="space-y-3">
@@ -65,11 +65,11 @@ type PricingPoint = {
   low: number;
   avg: number;
   high: number;
-  trend: number[];
-  colorClass: string;
+  sample: string;
+  note: string;
 };
 
-const generateMockMarketplaceData = (item: {
+const generatePricingReferences = (item: {
   estimated_price?: number | null;
   price_low?: number | null;
   price_high?: number | null;
@@ -85,32 +85,32 @@ const generateMockMarketplaceData = (item: {
       low: Math.round(safeLow * 0.92),
       avg: Math.round(base * 0.98),
       high: Math.round(safeHigh * 1.02),
-      trend: [62, 68, 72, 70, 75],
-      colorClass: "from-emerald-500 to-emerald-300",
+      sample: "Similar style listings",
+      note: "Best when measurements and flaws are clearly shown",
     },
     {
       platform: "eBay",
       low: Math.round(safeLow * 0.88),
       avg: Math.round(base * 0.94),
       high: Math.round(safeHigh * 0.98),
-      trend: [55, 60, 66, 64, 69],
-      colorClass: "from-sky-500 to-sky-300",
+      sample: "Recent sold listings",
+      note: "Search title and condition details affect price",
     },
     {
       platform: "StockX",
       low: Math.round(safeLow * 0.95),
       avg: Math.round(base * 1.03),
       high: Math.round(safeHigh * 1.1),
-      trend: [70, 74, 78, 80, 84],
-      colorClass: "from-violet-500 to-violet-300",
+      sample: "Model-based price check",
+      note: "Most useful for exact sneakers and verified items",
     },
     {
       platform: "Depop",
       low: Math.round(safeLow * 0.85),
       avg: Math.round(base * 0.92),
       high: Math.round(safeHigh * 0.96),
-      trend: [50, 55, 60, 58, 63],
-      colorClass: "from-stone-500 to-stone-300",
+      sample: "Similar casual listings",
+      note: "Good photos and simple captions help quick sales",
     },
   ];
 };
@@ -128,53 +128,72 @@ const MarketplacePricingIntelligence = ({
   };
 }) => {
   const [pricingBias, setPricingBias] = useState(32);
-  const platformData = useMemo(() => generateMockMarketplaceData(item), [item]);
+  const platformData = useMemo(() => generatePricingReferences(item), [item]);
 
   const pricingSummary = useMemo(() => {
     const low = Math.min(...platformData.map((row) => row.low));
     const avg = Math.round(platformData.reduce((sum, row) => sum + row.avg, 0) / platformData.length);
     const high = Math.max(...platformData.map((row) => row.high));
+    const quickSale = Math.round((low + avg) / 2);
+    const higherAsk = Math.round((avg + high) / 2);
     const recommended = Math.round(
-      Math.max(
-        avg + (high - avg) * (pricingBias / 100) * 0.8,
-        avg * (1 - (100 - pricingBias) / 100 * 0.08)
-      )
+      quickSale + (higherAsk - quickSale) * (pricingBias / 100)
     );
-    return { low, avg, high, recommended };
+    return { low, avg, high, quickSale, higherAsk, recommended };
   }, [platformData, pricingBias]);
 
   return (
-    <div className="rounded-4xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300 hover:shadow-lg">
+    <div className="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-lg">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Market pricing intelligence</p>
-          <h4 className="mt-2 text-lg font-semibold text-stone-900">Cross-market insight</h4>
-          <p className="mt-1 text-sm text-stone-600">Resale pricing across major platforms with compact marketplace signals.</p>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Price check</p>
+          <h4 className="mt-2 text-lg font-semibold text-stone-950">What similar items sell for</h4>
+          <p className="mt-1 text-sm text-stone-600">
+            Estimates are based on the saved item price, low/high range, and example selling-app references. Review before listing.
+          </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-4">
-          <div className="rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-stone-900 shadow-sm">
+          <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-stone-950 shadow-sm">
             <p className="text-[0.65rem] uppercase tracking-[0.3em] text-stone-500">Lowest</p>
             <p className="mt-2 text-xl font-semibold">${pricingSummary.low.toLocaleString()}</p>
           </div>
-          <div className="rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-stone-900 shadow-sm">
+          <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-stone-950 shadow-sm">
             <p className="text-[0.65rem] uppercase tracking-[0.3em] text-stone-500">Average</p>
             <p className="mt-2 text-xl font-semibold">${pricingSummary.avg.toLocaleString()}</p>
           </div>
-          <div className="rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-stone-900 shadow-sm">
+          <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-stone-950 shadow-sm">
             <p className="text-[0.65rem] uppercase tracking-[0.3em] text-stone-500">Highest</p>
             <p className="mt-2 text-xl font-semibold">${pricingSummary.high.toLocaleString()}</p>
           </div>
-          <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-stone-900 shadow-sm">
-            <p className="text-[0.65rem] uppercase tracking-[0.3em] text-emerald-700">Recommended</p>
-            <p className="mt-2 text-xl font-semibold text-emerald-900">${pricingSummary.recommended.toLocaleString()}</p>
+          <div className="rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-stone-950 shadow-sm">
+            <p className="text-[0.65rem] uppercase tracking-[0.3em] text-stone-600">Suggested</p>
+            <p className="mt-2 text-xl font-semibold text-stone-950">${pricingSummary.recommended.toLocaleString()}</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 rounded-4xl border border-stone-100 bg-stone-50 p-3">
+      <div className="mt-4 grid gap-3 rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:grid-cols-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-stone-500">Quick sale</p>
+          <p className="mt-2 text-lg font-semibold text-stone-950">${pricingSummary.quickSale.toLocaleString()}</p>
+          <p className="mt-1 text-xs leading-5 text-stone-500">Lower price if you want it to move faster.</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-stone-500">Fair ask</p>
+          <p className="mt-2 text-lg font-semibold text-stone-950">${pricingSummary.avg.toLocaleString()}</p>
+          <p className="mt-1 text-xs leading-5 text-stone-500">A balanced starting point from the reference range.</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-stone-500">Higher ask</p>
+          <p className="mt-2 text-lg font-semibold text-stone-950">${pricingSummary.higherAsk.toLocaleString()}</p>
+          <p className="mt-1 text-xs leading-5 text-stone-500">Use only if photos, condition, and size are strong.</p>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-3xl border border-stone-200 bg-stone-50 p-3">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-600">Pricing strategy</p>
-          <p className="text-xs font-medium text-stone-700">{pricingBias < 50 ? "Sell Fast" : pricingBias > 50 ? "Max Profit" : "Balanced"}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-600">Selling goal</p>
+          <p className="text-xs font-medium text-stone-800">{pricingBias < 40 ? "Faster sale" : pricingBias > 65 ? "Higher ask" : "Balanced"}</p>
         </div>
         <div className="mt-3">
           <input
@@ -183,29 +202,29 @@ const MarketplacePricingIntelligence = ({
             max={100}
             value={pricingBias}
             onChange={(event) => setPricingBias(Number(event.target.value))}
-            className="w-full appearance-none rounded-full bg-stone-200 h-2 accent-stone-900"
+            className="h-2 w-full appearance-none rounded-full bg-stone-200 accent-stone-950"
           />
           <div className="mt-2 flex items-center justify-between text-[11px] text-stone-500">
-            <span>Sell Fast</span>
-            <span>Max Profit</span>
+            <span>Faster sale</span>
+            <span>Higher ask</span>
           </div>
         </div>
       </div>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
         {platformData.map((row) => (
-          <div key={row.platform} className="rounded-4xl border border-stone-200 bg-white p-3 text-stone-900 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300">
+          <div key={row.platform} className="rounded-3xl border border-stone-200 bg-white p-3 text-stone-900 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-600">{row.platform}</span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500">{item.brand || item.category || "Design"}</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-700">{row.platform}</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500">{row.sample}</span>
             </div>
-            <div className="mt-3 grid gap-2 text-xs text-stone-700">
+            <div className="mt-3 grid gap-2 text-xs text-stone-600">
               <div className="flex items-center justify-between">
                 <span>Low</span>
                 <span>${row.low.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Avg</span>
+                <span>Usually around</span>
                 <span>${row.avg.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
@@ -213,11 +232,7 @@ const MarketplacePricingIntelligence = ({
                 <span>${row.high.toLocaleString()}</span>
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-2">
-              {row.trend.map((value, idx) => (
-                <div key={idx} className="h-2 rounded-full bg-white/15 transition-all duration-300" style={{ width: `${value}%` }} />
-              ))}
-            </div>
+            <p className="mt-3 rounded-2xl bg-stone-50 px-3 py-2 text-xs leading-5 text-stone-500">{row.note}</p>
           </div>
         ))}
       </div>
@@ -316,7 +331,7 @@ export default function InventoryPage() {
       setGeneratedTitle(analysis.generated_title || `${analysis.brand} ${analysis.category}`);
       setGeneratedDescription(
         analysis.generated_description ||
-        `A considered ${analysis.category.toLowerCase()} piece from ${analysis.brand}, primed for the resale market.`
+        `A clean ${analysis.category.toLowerCase()} piece from ${analysis.brand}, ready to review before selling.`
       );
       setGeneratedCategory(analysis.category);
       setGeneratedBrand(analysis.brand);
@@ -372,7 +387,10 @@ export default function InventoryPage() {
   useEffect(() => {
     if (typeof navigator === 'undefined') return;
     const mobileRegex = /Mobi|Android|iPhone|iPad|iPod|webOS|BlackBerry|Opera Mini/i;
-    setIsMobile(mobileRegex.test(navigator.userAgent) || navigator.maxTouchPoints > 1);
+    const frame = requestAnimationFrame(() => {
+      setIsMobile(mobileRegex.test(navigator.userAgent) || navigator.maxTouchPoints > 1);
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const handleUpload = async () => {
@@ -540,57 +558,57 @@ export default function InventoryPage() {
 
   return (
     <ProtectedPage>
-      <div className="min-h-screen bg-stone-50 text-stone-900">
+      <div className="min-h-screen bg-stone-50 text-stone-950">
         <Header />
         <main className="px-6 py-12 lg:px-10">
           <div className="mx-auto max-w-7xl">
             {/* Hero Section */}
             <section className="mb-10">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500">Resale workspace</p>
-              <h1 className="mt-4 text-3xl font-semibold text-stone-900">Professional inventory management</h1>
+              <p className="inline-flex rounded-full border border-stone-300 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-600 shadow-sm">Resale workspace</p>
+              <h1 className="mt-4 bg-transparent text-3xl font-semibold tracking-[-0.03em] text-stone-950">Professional inventory management</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-600">
-                Advanced reseller platform with AI-powered pricing, marketplace insights, and real-time inventory tracking.
+                AI pricing help, selling-app context, and real-time inventory tracking in a compact seller workspace.
               </p>
             </section>
 
             {/* Statistics Dashboard */}
             <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              <div className="rounded-4xl border border-stone-200 bg-white p-4">
+              <div className="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-md">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Total items</p>
-                <p className="mt-3 text-3xl font-semibold text-stone-900">{inventory.length}</p>
+                <p className="mt-3 text-3xl font-semibold text-stone-950">{inventory.length}</p>
                 <p className="mt-2 text-xs text-stone-500">In your inventory</p>
               </div>
-              <div className="rounded-4xl border border-stone-200 bg-white p-4">
+              <div className="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-md">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Total value</p>
-                <p className="mt-3 text-3xl font-semibold text-stone-900">${(stats.totalValue / 1000).toFixed(1)}k</p>
+                <p className="mt-3 text-3xl font-semibold text-stone-950">${(stats.totalValue / 1000).toFixed(1)}k</p>
                 <p className="mt-2 text-xs text-stone-500">Estimated portfolio</p>
               </div>
-              <div className="rounded-4xl border border-stone-200 bg-white p-4">
+              <div className="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-md">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Active listings</p>
-                <p className="mt-3 text-3xl font-semibold text-stone-900">{stats.listed.length}</p>
-                <p className="mt-2 text-xs text-stone-500">${(stats.listedValue / 1000).toFixed(1)}k value</p>
+                <p className="mt-3 text-3xl font-semibold text-stone-950">{stats.listed.length}</p>
+                <p className="mt-2 text-xs text-stone-600">${(stats.listedValue / 1000).toFixed(1)}k value</p>
               </div>
-              <div className="rounded-4xl border border-stone-200 bg-white p-6">
+              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-md">
                 <p className="text-xs uppercase tracking-[0.24em] text-stone-500">Drafts</p>
-                <p className="mt-4 text-4xl font-semibold text-stone-900">{stats.drafts.length}</p>
+                <p className="mt-4 text-4xl font-semibold text-stone-950">{stats.drafts.length}</p>
                 <p className="mt-2 text-xs text-stone-500">${(stats.draftValue / 1000).toFixed(1)}k awaiting</p>
               </div>
-              <div className="rounded-4xl border border-stone-200 bg-white p-6">
+              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-md">
                 <p className="text-xs uppercase tracking-[0.24em] text-stone-500">Sold</p>
-                <p className="mt-4 text-4xl font-semibold text-stone-900">{stats.sold.length}</p>
+                <p className="mt-4 text-4xl font-semibold text-stone-950">{stats.sold.length}</p>
                 <p className="mt-2 text-xs text-stone-500">Completed sales</p>
               </div>
             </section>
 
             {/* Upload + Quick Actions Section */}
             <section className="mb-10 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-4xl border border-stone-200 bg-white p-6">
+              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Upload new item</p>
-                <h2 className="mt-2 text-xl font-semibold text-stone-900">Add to inventory</h2>
-                <p className="mt-2 text-sm text-stone-600">Use intelligent analysis to estimate price, condition, and demand.</p>
+                <h2 className="mt-2 text-xl font-semibold text-stone-950">Add to inventory</h2>
+                <p className="mt-2 text-sm text-stone-600">Use AI to estimate price, condition, and buyer interest.</p>
                 <div className="mt-4 flex flex-col gap-3">
-                  <label className={`rounded-3xl border-2 border-dashed border-stone-200 bg-stone-50 px-5 py-6 text-center transition cursor-pointer ${
-                    uploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-stone-300 hover:bg-stone-100'
+                  <label className={`cursor-pointer rounded-3xl border border-dashed border-stone-300 bg-stone-50 px-5 py-6 text-center transition ${
+                    uploading ? 'cursor-not-allowed opacity-50' : 'hover:border-stone-400 hover:bg-stone-100'
                   }`}>
                     <input
                       ref={fileInputRef}
@@ -609,10 +627,10 @@ export default function InventoryPage() {
                       disabled={uploading}
                       className="hidden"
                     />
-                    <svg className="mx-auto h-8 w-8 text-stone-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <svg className="mx-auto h-8 w-8 text-stone-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                     </svg>
-                    <p className="mt-2 text-sm font-semibold text-stone-900">{uploading ? 'Processing...' : isMobile ? 'Tap to upload or take a photo' : 'Click to upload or drag'}</p>
+                    <p className="mt-2 text-sm font-semibold text-stone-950">{uploading ? 'Processing...' : isMobile ? 'Tap to upload or take a photo' : 'Click to upload or drag'}</p>
                     <p className="text-xs text-stone-500">PNG, JPG up to 10MB</p>
                   </label>
                   {isMobile && !uploading && (
@@ -620,28 +638,28 @@ export default function InventoryPage() {
                       <button
                         type="button"
                         onClick={openCameraCapture}
-                        className="w-full rounded-3xl bg-stone-900 px-4 py-4 text-sm font-semibold text-white transition hover:bg-stone-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-stone-900"
+                        className="w-full rounded-full bg-stone-950 px-4 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-stone-950"
                       >
                         Take Photo
                       </button>
                       <button
                         type="button"
                         onClick={openGalleryUpload}
-                        className="w-full rounded-3xl border border-stone-200 bg-white px-4 py-4 text-sm font-semibold text-stone-900 transition hover:bg-stone-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-stone-900"
+                        className="w-full rounded-full border border-stone-200 bg-white px-4 py-4 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-stone-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-stone-950"
                       >
                         Upload from Gallery
                       </button>
                     </div>
                   )}
                   {uploading && (
-                    <div className="rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600">
+                    <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-700">
                       {uploadProgress}
                     </div>
                   )}
                   {previewUrl && !uploading && (
                     <div className="mt-3 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
                       <div className="grid gap-4">
-                        <div className="overflow-hidden rounded-4xl border border-stone-200 bg-stone-100 shadow-sm">
+                        <div className="overflow-hidden rounded-3xl border border-stone-200 bg-stone-100 shadow-sm">
                           <div className="aspect-[5/4] overflow-hidden">
                             <img
                               src={previewUrl}
@@ -649,17 +667,17 @@ export default function InventoryPage() {
                               className="h-full w-full object-cover transition duration-500 hover:scale-105"
                             />
                           </div>
-                          <div className="border-t border-stone-200 bg-white/90 px-4 py-3 text-sm text-stone-600">
-                            <p className="font-semibold text-stone-900">Preview</p>
+                          <div className="border-t border-stone-200 bg-white px-4 py-3 text-sm text-stone-600">
+                            <p className="font-semibold text-stone-950">Preview</p>
                             <p className="mt-1 text-sm">Ready for listing.</p>
                           </div>
                         </div>
 
-                        <div className="rounded-4xl border border-stone-200 bg-white p-4 shadow-sm">
+                        <div className="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm">
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                               <p className="text-[10px] uppercase tracking-[0.18em] text-stone-500">Suggested listing</p>
-                              <h3 className="mt-1 text-lg font-semibold text-stone-900">Listing metrics</h3>
+                              <h3 className="mt-1 text-lg font-semibold text-stone-950">What Kloset found</h3>
                             </div>
                             <span className="rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-[11px] uppercase tracking-[0.15em] text-stone-600">
                               {analysisLoading ? 'Preparing' : analysisReady ? 'Ready to review' : 'Waiting'}
@@ -668,28 +686,28 @@ export default function InventoryPage() {
 
                           {analysisReady && analysisResult && (
                             <div className="mt-3 grid gap-3 grid-cols-1 sm:grid-cols-2">
-                              <div className="min-w-0 rounded-3xl bg-stone-50 px-3 py-3 shadow-sm">
+                              <div className="min-w-0 rounded-2xl bg-stone-50 px-3 py-3 shadow-sm">
                                 <div className="flex flex-col justify-between gap-1">
-                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Brand confidence</p>
-                                  <p className="text-lg font-semibold text-stone-900 break-words">{analysisResult.brand_confidence}%</p>
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Brand match</p>
+                                  <p className="break-words text-lg font-semibold text-stone-950">{analysisResult.brand_confidence}%</p>
                                 </div>
                               </div>
-                              <div className="min-w-0 rounded-3xl bg-stone-50 px-3 py-3 shadow-sm">
+                              <div className="min-w-0 rounded-2xl bg-stone-50 px-3 py-3 shadow-sm">
                                 <div className="flex flex-col justify-between gap-1">
-                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">AI confidence</p>
-                                  <p className="text-lg font-semibold text-stone-900 break-words">{analysisResult.confidence_score}%</p>
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Overall match</p>
+                                  <p className="break-words text-lg font-semibold text-stone-950">{analysisResult.confidence_score}%</p>
                                 </div>
                               </div>
-                              <div className="min-w-0 rounded-3xl bg-stone-50 px-3 py-3 shadow-sm">
+                              <div className="min-w-0 rounded-2xl bg-stone-50 px-3 py-3 shadow-sm">
                                 <div className="flex flex-col justify-between gap-1">
-                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Demand</p>
-                                  <p className="text-lg font-semibold text-stone-900 break-words">{analysisResult.market_demand}</p>
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Buyer interest</p>
+                                  <p className="break-words text-lg font-semibold text-stone-950">{analysisResult.market_demand}</p>
                                 </div>
                               </div>
-                              <div className="min-w-0 rounded-3xl bg-stone-50 px-3 py-3 shadow-sm">
+                              <div className="min-w-0 rounded-2xl bg-stone-50 px-3 py-3 shadow-sm">
                                 <div className="flex flex-col justify-between gap-1">
-                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Sell-through</p>
-                                  <p className="text-lg font-semibold text-stone-900 break-words">{analysisResult.sell_through_estimate}</p>
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-stone-500 leading-5">Likely sale timing</p>
+                                  <p className="break-words text-lg font-semibold text-stone-950">{analysisResult.sell_through_estimate}</p>
                                 </div>
                               </div>
                             </div>
@@ -698,11 +716,11 @@ export default function InventoryPage() {
                       </div>
 
                       <div className="grid gap-4">
-                        <div className="rounded-4xl border border-stone-200 bg-white p-4 shadow-sm">
+                        <div className="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm">
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                               <p className="text-[10px] uppercase tracking-[0.18em] text-stone-500">Listing details</p>
-                              <h3 className="mt-1 text-lg font-semibold text-stone-900">Refine item</h3>
+                              <h3 className="mt-1 text-lg font-semibold text-stone-950">Refine item</h3>
                             </div>
                             <span className="rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-[11px] uppercase tracking-[0.15em] text-stone-600">
                               {analysisReady ? 'Ready' : analysisLoading ? 'Analyzing' : 'Waiting'}
@@ -715,7 +733,7 @@ export default function InventoryPage() {
                               <input
                                 value={generatedTitle}
                                 onChange={(event) => setGeneratedTitle(event.target.value)}
-                                className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-950 outline-none transition hover:border-stone-300 focus:border-stone-500 focus:bg-white"
                               />
                             </div>
                             <div>
@@ -724,7 +742,7 @@ export default function InventoryPage() {
                                 value={generatedDescription}
                                 onChange={(event) => setGeneratedDescription(event.target.value)}
                                 rows={3}
-                                className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-950 outline-none transition hover:border-stone-300 focus:border-stone-500 focus:bg-white"
                               />
                             </div>
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -733,7 +751,7 @@ export default function InventoryPage() {
                                 <input
                                   value={generatedCategory}
                                   onChange={(event) => setGeneratedCategory(event.target.value)}
-                                  className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                  className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-950 outline-none transition hover:border-stone-300 focus:border-stone-500 focus:bg-white"
                                 />
                               </div>
                               <div>
@@ -741,20 +759,20 @@ export default function InventoryPage() {
                                 <input
                                   value={generatedBrand}
                                   onChange={(event) => setGeneratedBrand(event.target.value)}
-                                  className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                  className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-950 outline-none transition hover:border-stone-300 focus:border-stone-500 focus:bg-white"
                                 />
                               </div>
                             </div>
                             <div className="grid gap-3 sm:grid-cols-2">
                               <div>
-                                <label className="block text-sm font-semibold text-stone-800">Recommended price</label>
+                                <label className="block text-sm font-semibold text-stone-800">Suggested price</label>
                                 <div className="relative">
                                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-stone-500">$</span>
                                   <input
                                     type="number"
                                     value={generatedPrice}
                                     onChange={(event) => setGeneratedPrice(Number(event.target.value))}
-                                    className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 pl-9 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                    className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-3 py-3 pl-9 text-sm text-stone-950 outline-none transition hover:border-stone-300 focus:border-stone-500 focus:bg-white"
                                   />
                                 </div>
                               </div>
@@ -763,21 +781,21 @@ export default function InventoryPage() {
                                 <input
                                   value={generatedCondition}
                                   onChange={(event) => setGeneratedCondition(event.target.value)}
-                                  className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-900"
+                                  className="w-full rounded-2xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm text-stone-950 outline-none transition hover:border-stone-300 focus:border-stone-500 focus:bg-white"
                                 />
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        <div className="rounded-4xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-600 shadow-sm">
+                        <div className="rounded-3xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-600 shadow-sm">
                           <div className="grid gap-2">
                             <div className="flex items-center justify-between">
                               <span>Low estimate</span>
                               <span>${analysisResult?.price_low?.toLocaleString() || '--'}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span>Average estimate</span>
+                              <span>Usually sells around</span>
                               <span>${analysisResult?.price_average?.toLocaleString() || '--'}</span>
                             </div>
                             <div className="flex items-center justify-between">
@@ -785,27 +803,27 @@ export default function InventoryPage() {
                               <span>${analysisResult?.price_high?.toLocaleString() || '--'}</span>
                             </div>
                             <div className="flex items-center justify-between border-t border-stone-200 pt-3">
-                              <span className="font-medium">Quick sale</span>
-                              <span className="font-semibold text-stone-900">${analysisResult?.recommended_quick_sale?.toLocaleString() || '--'}</span>
+                              <span className="font-medium">Good for quick sale</span>
+                              <span className="font-semibold text-stone-950">${analysisResult?.recommended_quick_sale?.toLocaleString() || '--'}</span>
                             </div>
                           </div>
                           <div className="mt-3 grid gap-3 sm:grid-cols-2">
                             <button
                               onClick={handleUpload}
                               disabled={!analysisReady || uploading}
-                              className="rounded-3xl bg-stone-900 px-3 py-3 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="rounded-full bg-stone-950 px-3 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {uploading ? 'Saving...' : 'Save'}
                             </button>
                             <button
                               onClick={cancelUpload}
-                              className="rounded-3xl border border-stone-200 bg-white px-3 py-3 text-sm font-semibold text-stone-900 transition hover:bg-stone-50"
+                              className="rounded-full border border-stone-200 bg-white px-3 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-stone-50"
                             >
                               Cancel
                             </button>
                           </div>
                           <p className="mt-3 text-xs text-stone-500">
-                            Use the generated title and price as a premium baseline, then refine the description to match your brand voice.
+                            Kloset suggests a starting point from the item details. Review the price, condition, and description before saving.
                           </p>
                         </div>
                       </div>
@@ -814,28 +832,28 @@ export default function InventoryPage() {
                 </div>
               </div>
 
-              <div className="rounded-4xl border border-stone-200 bg-white p-5">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Portfolio snapshot</p>
-                <h2 className="mt-2 text-xl font-semibold text-stone-900">Your resale metrics</h2>
+              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-stone-500">Inventory snapshot</p>
+                <h2 className="mt-2 text-xl font-semibold text-stone-950">What to focus on</h2>
                 <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3">
-                    <span className="text-sm text-stone-600">Trending category</span>
-                    <span className="font-semibold text-stone-900">{stats.trendingCategory}</span>
+                  <div className="flex items-center justify-between rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+                    <span className="text-sm text-stone-600">Most common category</span>
+                    <span className="font-semibold text-stone-950">{stats.trendingCategory}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3">
-                    <span className="text-sm text-stone-600">Avg. item value</span>
-                    <span className="font-semibold text-stone-900">${inventory.length > 0 ? Math.round(stats.totalValue / inventory.length) : 0}</span>
+                  <div className="flex items-center justify-between rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+                    <span className="text-sm text-stone-600">Average item value</span>
+                    <span className="font-semibold text-stone-950">${inventory.length > 0 ? Math.round(stats.totalValue / inventory.length) : 0}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3">
-                    <span className="text-sm text-stone-600">Listed percentage</span>
-                    <span className="font-semibold text-stone-900">{inventory.length > 0 ? Math.round((stats.listed.length / inventory.length) * 100) : 0}%</span>
+                  <div className="flex items-center justify-between rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3">
+                    <span className="text-sm text-stone-600">Listed items</span>
+                    <span className="font-semibold text-stone-950">{inventory.length > 0 ? Math.round((stats.listed.length / inventory.length) * 100) : 0}%</span>
                   </div>
                 </div>
               </div>
             </section>
 
             {/* Filter Toolbar */}
-            <section className="mb-6 rounded-4xl border border-stone-200 bg-white p-4">
+            <section className="mb-6 rounded-3xl border border-stone-200 bg-white p-4 shadow-sm">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1">
                   <label className="sr-only" htmlFor="inventory-search-toolbar">Search inventory</label>
@@ -845,14 +863,14 @@ export default function InventoryPage() {
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Search by name, brand, or category..."
-                    className="w-full rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition hover:border-stone-300 focus:border-stone-400 focus:bg-white"
+                    className="w-full rounded-full border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-950 outline-none transition hover:border-stone-300 focus:border-stone-500 focus:bg-white"
                   />
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <select
                     value={statusFilter}
                     onChange={(event) => setStatusFilter(event.target.value)}
-                    className="rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition hover:border-stone-300 focus:border-stone-400 focus:bg-white"
+                    className="rounded-full border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-950 outline-none transition hover:border-stone-300 focus:border-stone-500 focus:bg-white"
                   >
                     {statusMap.map((status) => (
                       <option key={status} value={status}>{status}</option>
@@ -861,7 +879,7 @@ export default function InventoryPage() {
                   <select
                     value={sortKey}
                     onChange={(event) => setSortKey(event.target.value)}
-                    className="rounded-3xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition hover:border-stone-300 focus:border-stone-400 focus:bg-white"
+                    className="rounded-full border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-950 outline-none transition hover:border-stone-300 focus:border-stone-500 focus:bg-white"
                   >
                     {sortOptions.map((option) => (
                       <option key={option.id} value={option.id}>{option.label}</option>
@@ -872,7 +890,7 @@ export default function InventoryPage() {
                       type="button"
                       onClick={() => setView("grid")}
                       className={`rounded-3xl px-4 py-3 text-sm font-semibold transition ${
-                        view === "grid" ? "bg-stone-900 text-white" : "border border-stone-200 bg-stone-50 text-stone-700 hover:border-stone-300"
+                        view === "grid" ? "bg-stone-950 text-white" : "border border-stone-200 bg-stone-50 text-stone-700 hover:border-stone-300 hover:bg-stone-100"
                       }`}
                     >
                       Grid
@@ -881,7 +899,7 @@ export default function InventoryPage() {
                       type="button"
                       onClick={() => setView("list")}
                       className={`rounded-3xl px-4 py-3 text-sm font-semibold transition ${
-                        view === "list" ? "bg-stone-900 text-white" : "border border-stone-200 bg-stone-50 text-stone-700 hover:border-stone-300"
+                        view === "list" ? "bg-stone-950 text-white" : "border border-stone-200 bg-stone-50 text-stone-700 hover:border-stone-300 hover:bg-stone-100"
                       }`}
                     >
                       List
@@ -897,60 +915,60 @@ export default function InventoryPage() {
             {/* Inventory Display */}
             <section>
               {loading ? (
-                <div className="rounded-4xl border border-dashed border-stone-200 bg-stone-50 p-10 text-center">
+                <div className="rounded-3xl border border-dashed border-stone-200 bg-stone-50 p-10 text-center">
                   <p className="text-stone-500">Loading your inventory...</p>
                 </div>
               ) : error ? (
-                <div className="rounded-4xl border border-red-200 bg-red-50 p-10 text-center text-red-700">
+                <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center text-red-700">
                   <p className="font-semibold">Error loading inventory</p>
                   <p className="mt-3 text-sm text-red-700">{error}</p>
                   <button
                     type="button"
                     onClick={refresh}
-                    className="mt-4 inline-flex items-center justify-center rounded-3xl border border-red-300 bg-white px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                    className="mt-4 inline-flex items-center justify-center rounded-full border border-red-300 bg-white px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
                   >
                     Retry loading inventory
                   </button>
                 </div>
               ) : filteredInventory.length === 0 && inventory.length === 0 ? (
-                <div className="rounded-4xl border border-dashed border-stone-200 bg-gradient-to-br from-stone-50 to-stone-100 p-14 text-center">
+                <div className="rounded-3xl border border-dashed border-stone-200 bg-white p-10 text-center shadow-sm sm:p-14">
                   <div className="mx-auto max-w-md">
-                    <div className="mx-auto h-16 w-16 text-stone-400 mb-4">
+                    <div className="mx-auto mb-4 h-16 w-16 text-stone-400">
                       <svg fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-bold text-stone-900 mb-3">Your luxury inventory awaits</h3>
-                    <p className="text-stone-600 leading-relaxed mb-8">
-                      Transform your closet into a profitable business. Upload your first item and let AI analyze pricing, condition, and marketplace demand across platforms like Grailed, Depop, and eBay.
+                    <h3 className="mb-3 text-2xl font-semibold text-stone-950">Your inventory desk is empty</h3>
+                    <p className="mb-8 leading-relaxed text-stone-600">
+                      Upload your first item and let AI check pricing, condition, and buyer interest across apps like Grailed, Depop, and eBay.
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                      <label htmlFor="empty-upload-hero" className="inline-flex items-center gap-3 rounded-3xl bg-stone-900 px-8 py-4 text-sm font-bold text-white transition hover:bg-stone-800 hover:shadow-lg cursor-pointer">
+                    <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                      <label htmlFor="empty-upload-hero" className="inline-flex cursor-pointer items-center gap-3 rounded-full bg-stone-950 px-8 py-4 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-stone-800">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                         Upload Your First Item
                       </label>
-                      <p className="text-xs text-stone-500 font-medium">PNG, JPG up to 10MB</p>
+                      <p className="text-xs font-medium text-stone-500">PNG, JPG up to 10MB</p>
                     </div>
                   </div>
                 </div>
               ) : filteredInventory.length === 0 ? (
-                <div className="rounded-4xl border border-dashed border-stone-200 bg-stone-50 p-10 text-center">
+                <div className="rounded-3xl border border-dashed border-stone-200 bg-stone-50 p-10 text-center">
                   <div className="mx-auto max-w-sm">
-                    <div className="mx-auto h-12 w-12 text-stone-300 mb-4">
+                    <div className="mx-auto mb-4 h-12 w-12 text-stone-500">
                       <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-semibold text-stone-900">No items match your filters</h3>
+                    <h3 className="text-lg font-semibold text-stone-950">No items match your filters</h3>
                     <p className="mt-2 text-sm text-stone-600">Try adjusting your search, status, or sort options</p>
                   </div>
                 </div>
               ) : view === "grid" ? (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredInventory.map((item) => (
-                    <article key={item.id} className="group relative flex flex-col rounded-4xl border border-stone-200 bg-white overflow-hidden transition-all duration-300 hover:border-stone-300 hover:shadow-2xl hover:shadow-stone-900/10 hover:-translate-y-1">
+                    <article key={item.id} className="group relative flex flex-col overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-stone-300 hover:shadow-xl">
                       <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
                         {item.image_url && (
                           <img
@@ -962,17 +980,17 @@ export default function InventoryPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                         <div className="absolute top-4 right-4">
                           <span className={`rounded-full px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.25em] shadow-lg ${
-                            item.status === 'Listed' ? 'bg-emerald-500 text-white shadow-emerald-500/25' :
-                            item.status === 'Sold' ? 'bg-blue-500 text-white shadow-blue-500/25' :
-                            'bg-stone-900 text-white shadow-stone-900/25'
+                            item.status === 'Listed' ? 'bg-stone-950 text-white shadow-stone-950/20' :
+                            item.status === 'Sold' ? 'bg-sky-400 text-stone-950 shadow-sky-400/25' :
+                            'bg-stone-950 text-white shadow-stone-950/25'
                           }`}>
                             {item.status}
                           </span>
                         </div>
                         <div className="absolute bottom-4 left-4 right-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                           <div className="flex items-center justify-between">
-                            <div className="rounded-2xl bg-white/90 backdrop-blur-sm px-3 py-2 shadow-lg">
-                              <p className="text-xs font-semibold text-stone-900">
+                            <div className="rounded-2xl bg-white/90 px-3 py-2 shadow-lg backdrop-blur-sm">
+                              <p className="text-xs font-semibold text-stone-950">
                                 ${item.estimated_price?.toLocaleString() || 'TBD'}
                               </p>
                             </div>
@@ -980,7 +998,7 @@ export default function InventoryPage() {
                               type="button"
                               onClick={() => handleStatusUpdate(item.id, item.status === "Listed" ? "Sold" : item.status === "Sold" ? "Draft" : "Listed")}
                               disabled={updatingIds.has(item.id)}
-                              className="rounded-2xl bg-white/90 backdrop-blur-sm px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-stone-900 shadow-lg transition hover:bg-stone-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                              className="rounded-2xl bg-stone-950 px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-lg backdrop-blur-sm transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {updatingIds.has(item.id) ? "…" : item.status === "Listed" ? "Sold" : item.status === "Sold" ? "Draft" : "List"}
                             </button>
@@ -989,9 +1007,9 @@ export default function InventoryPage() {
                       </div>
                       <div className="flex flex-1 flex-col p-6">
                         <div className="flex-1">
-                          <p className="text-xs uppercase tracking-[0.28em] text-stone-500 font-medium">{item.brand}</p>
-                          <h3 className="mt-3 line-clamp-2 text-lg font-bold text-stone-900 leading-tight">{item.item_name}</h3>
-                          <p className="mt-3 text-sm text-stone-600 font-medium">{item.category}</p>
+                          <p className="text-xs font-medium uppercase tracking-[0.24em] text-stone-500">{item.brand}</p>
+                          <h3 className="mt-3 line-clamp-2 text-lg font-semibold leading-tight text-stone-950">{item.item_name}</h3>
+                          <p className="mt-3 text-sm font-medium text-stone-600">{item.category}</p>
                           {item.created_at && (
                             <p className="mt-2 text-xs text-stone-400 font-medium">Added {formatDate(item.created_at)}</p>
                           )}
@@ -1004,7 +1022,7 @@ export default function InventoryPage() {
                   ))}
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-4xl border border-stone-200 bg-white shadow-sm">
+                <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
                   <table className="w-full border-collapse text-left text-sm text-stone-700">
                     <thead className="border-b border-stone-200 bg-stone-50">
                       <tr>
@@ -1020,29 +1038,29 @@ export default function InventoryPage() {
                     <tbody>
                       {filteredInventory.map((item, idx) => (
                         <Fragment key={item.id}>
-                          <tr className={`border-t border-stone-200 transition hover:bg-stone-50 ${idx % 2 === 0 ? "bg-white" : "bg-stone-50"}`}>
-                            <td className="px-6 py-4 font-semibold text-stone-900">{item.item_name}</td>
+                          <tr className={`border-t border-stone-200 transition hover:bg-stone-100 ${idx % 2 === 0 ? "bg-white" : "bg-stone-50"}`}>
+                            <td className="px-6 py-4 font-semibold text-stone-950">{item.item_name}</td>
                             <td className="px-6 py-4">{item.brand}</td>
                             <td className="px-6 py-4 text-sm text-stone-600">{item.category}</td>
                             <td className="px-6 py-4">
                               <span className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.22em] ${
                                 item.status === "Listed"
-                                  ? "bg-green-100 text-green-800"
+                                  ? "bg-stone-200 text-stone-800"
                                   : item.status === "Sold"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-stone-900 text-white"
+                                  ? "bg-sky-100 text-sky-800"
+                                  : "bg-stone-950 text-white"
                               }`}>
                                 {item.status}
                               </span>
                             </td>
-                            <td className="px-6 py-4 font-semibold text-stone-900">${item.estimated_price?.toLocaleString() || 'TBD'}</td>
+                            <td className="px-6 py-4 font-semibold text-stone-950">${item.estimated_price?.toLocaleString() || 'TBD'}</td>
                             <td className="px-6 py-4 text-sm text-stone-500">{item.created_at ? formatDate(item.created_at) : '-'}</td>
                             <td className="px-6 py-4">
                               <button
                                 type="button"
                                 onClick={() => handleStatusUpdate(item.id, item.status === "Listed" ? "Sold" : item.status === "Sold" ? "Draft" : "Listed")}
                                 disabled={updatingIds.has(item.id)}
-                                className="rounded-full border border-stone-300 bg-stone-50 px-3 py-1 text-xs uppercase tracking-[0.2em] text-stone-700 transition hover:bg-stone-900 hover:text-white hover:border-stone-900 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-full border border-stone-300 bg-stone-50 px-3 py-1 text-xs uppercase tracking-[0.2em] text-stone-700 transition hover:border-stone-950 hover:bg-stone-950 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 {updatingIds.has(item.id) ? "…" : item.status === "Listed" ? "Sold" : item.status === "Sold" ? "Draft" : "List"}
                               </button>

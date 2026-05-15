@@ -11,6 +11,11 @@ type InventoryItemUpdate = Database["public"]["Tables"]["inventory_items"]["Upda
 
 type MarketplaceAnalytics = Database["public"]["Tables"]["marketplace_analytics"]["Row"];
 
+function isAbortError(err: unknown) {
+  if (!(err instanceof Error)) return false;
+  return err.name === "AbortError" || err.message.toLowerCase().includes("aborted");
+}
+
 export function useDatabase() {
   const { supabase } = useSupabase();
   const [dbService] = useState(() => new DatabaseService(supabase));
@@ -25,42 +30,97 @@ export function useInventoryItems() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryTrigger, setRetryTrigger] = useState(0);
-  const loadRef = useRef(false);
+  const activeLoadIdRef = useRef(0);
+  const loadTimeoutRef = useRef<number | null>(null);
+
+  const clearLoadTimeout = useCallback(() => {
+    if (loadTimeoutRef.current) {
+      window.clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+  }, []);
 
   const loadItems = useCallback(async () => {
     if (!session?.user?.id) {
       console.debug("[useInventoryItems] No authenticated user, skipping inventory load");
+      setItems([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
-    if (loadRef.current) {
-      console.debug("[useInventoryItems] Load already in progress, skipping");
-      return;
-    }
+    clearLoadTimeout();
 
-    loadRef.current = true;
+    const loadId = activeLoadIdRef.current + 1;
+    activeLoadIdRef.current = loadId;
+    loadTimeoutRef.current = window.setTimeout(() => {
+      if (activeLoadIdRef.current !== loadId) return;
+
+      console.warn("[useInventoryItems] Inventory load exceeded timeout, showing retry state", {
+        userId: session.user.id,
+        loadId,
+      });
+      activeLoadIdRef.current += 1;
+      setItems([]);
+      setError("Inventory could not load in time. Please retry.");
+      setLoading(false);
+    }, 20000);
+
     try {
-      console.debug("[useInventoryItems] Starting inventory load for user:", session.user.id);
+      console.debug("[useInventoryItems] Starting inventory load", { userId: session.user.id, loadId });
       setLoading(true);
       setError(null);
 
       const data = await db.getInventoryItems(session.user.id);
+      if (activeLoadIdRef.current !== loadId) {
+        console.debug("[useInventoryItems] Ignoring stale inventory response", { loadId });
+        return;
+      }
+
       setItems(data);
-      console.debug("[useInventoryItems] Successfully loaded", data.length, "items");
+      console.debug("[useInventoryItems] Successfully loaded inventory", { count: data.length, loadId });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load inventory';
-      console.error("[useInventoryItems] Inventory load failed:", message);
-      setError(message);
+      if (activeLoadIdRef.current !== loadId) {
+        console.debug("[useInventoryItems] Ignoring stale inventory error", { loadId });
+        return;
+      }
+
+      if (isAbortError(err)) {
+        console.debug("[useInventoryItems] Inventory request was cancelled, ignoring", {
+          message: err instanceof Error ? err.message : String(err),
+          loadId,
+        });
+        setLoading(false);
+        return;
+      }
+
+      const message = err instanceof Error ? err.message : "Failed to load inventory";
+      console.error("[useInventoryItems] Inventory load failed without crashing UI", {
+        message,
+        name: err instanceof Error ? err.name : undefined,
+        fullError: err,
+      });
+      setItems([]);
+      setError(
+        message.toLowerCase().includes("abort") || message.toLowerCase().includes("timeout")
+          ? "Inventory could not load in time. Please retry."
+          : message
+      );
     } finally {
-      setLoading(false);
-      loadRef.current = false;
+      if (activeLoadIdRef.current === loadId) {
+        clearLoadTimeout();
+        setLoading(false);
+      }
     }
-  }, [db, session?.user?.id]);
+  }, [clearLoadTimeout, db, session?.user?.id]);
 
   useEffect(() => {
     loadItems();
-  }, [loadItems, retryTrigger]);
+    return () => {
+      activeLoadIdRef.current += 1;
+      clearLoadTimeout();
+    };
+  }, [clearLoadTimeout, loadItems, retryTrigger]);
 
   // Real-time subscription
   useEffect(() => {
@@ -84,7 +144,10 @@ export function useInventoryItems() {
         (payload) => {
           console.debug("[useInventoryItems] Realtime update received:", payload.eventType);
           if (payload.eventType === 'INSERT') {
-            setItems(prev => [payload.new as InventoryItem, ...prev]);
+            setItems(prev => {
+              const newItem = payload.new as InventoryItem;
+              return prev.some((item) => item.id === newItem.id) ? prev : [newItem, ...prev];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setItems(prev => prev.map(item =>
               item.id === payload.new.id ? payload.new as InventoryItem : item

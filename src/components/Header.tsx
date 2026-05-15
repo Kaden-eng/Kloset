@@ -7,8 +7,12 @@ import { useSupabase } from "@/components/SupabaseProvider";
 import { useToast } from "@/components/ToastProvider";
 
 const navLinks = [
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/overview", label: "Overview" },
   { href: "/inventory", label: "Inventory" },
+  { href: "/listings", label: "Listings" },
+  { href: "/market", label: "Market" },
+  { href: "/sales", label: "Sales" },
+  { href: "/ai-tools", label: "AI Tools" },
 ];
 
 export default function Header({ transparent = false }: { transparent?: boolean }) {
@@ -83,15 +87,16 @@ export default function Header({ transparent = false }: { transparent?: boolean 
   return (
     <header
       className={`sticky top-0 z-50 border-b backdrop-blur-xl transition-colors duration-300 ${
-        transparent ? "bg-black/20 border-white/10" : "bg-stone-950/95 border-stone-800"
+        transparent ? "bg-black/15 border-white/10" : "bg-[#070807]/90 border-white/10"
       } shadow-[0_18px_50px_-24px_rgba(0,0,0,0.65)]`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 lg:px-8">
-        <Link href="/" className="text-lg font-black uppercase tracking-[0.35em] text-white">
-          Kloset
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+        <Link href="/" className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.28em] text-white">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#b7ff32] shadow-[0_0_20px_rgba(183,255,50,0.75)]" />
+          <span>Kloset</span>
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-5 lg:flex">
           {session &&
             navLinks.map((link) => (
               <Link key={link.href} href={link.href} className="text-sm font-medium text-stone-300 transition hover:text-white">
@@ -108,7 +113,7 @@ export default function Header({ transparent = false }: { transparent?: boolean 
               </Link>
               <Link
                 href="/auth/signup"
-                className="rounded-full border border-white/10 bg-white px-5 py-2 text-sm font-semibold text-stone-950 transition hover:bg-stone-100"
+                className="rounded-full border border-[#b7ff32]/40 bg-[#b7ff32] px-5 py-2 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:bg-[#d4ff70] hover:shadow-[0_14px_35px_-20px_rgba(183,255,50,0.9)]"
               >
                 Create account
               </Link>
@@ -120,7 +125,7 @@ export default function Header({ transparent = false }: { transparent?: boolean 
                 onClick={() => setMenuOpen((value) => !value)}
                 aria-expanded={menuOpen}
                 aria-haspopup="true"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-stone-900 text-sm font-semibold text-white shadow-sm"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/10 text-sm font-semibold text-white shadow-sm transition hover:border-[#b7ff32]/50 hover:text-[#b7ff32]"
               >
                 {initials || "U"}
               </button>
@@ -132,12 +137,11 @@ export default function Header({ transparent = false }: { transparent?: boolean 
                   <p className="text-xs uppercase tracking-[0.32em] text-stone-500">Account</p>
                   <p className="mt-3 text-sm font-semibold text-white truncate">{session.user.email}</p>
                   <div className="mt-4 space-y-2">
-                    <Link href="/dashboard" className="block rounded-2xl px-3 py-2 text-sm text-stone-300 transition hover:bg-white/5 hover:text-white">
-                      Dashboard
-                    </Link>
-                    <Link href="/inventory" className="block rounded-2xl px-3 py-2 text-sm text-stone-300 transition hover:bg-white/5 hover:text-white">
-                      Inventory
-                    </Link>
+                    {navLinks.map((link) => (
+                      <Link key={link.href} href={link.href} className="block rounded-2xl px-3 py-2 text-sm text-stone-300 transition hover:bg-white/5 hover:text-white">
+                        {link.label}
+                      </Link>
+                    ))}
                     <button
                       type="button"
                       onClick={handleLogout}

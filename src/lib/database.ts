@@ -14,8 +14,31 @@ type MarketplaceAnalyticsInsert = Database["public"]["Tables"]["marketplace_anal
 type SavedAnalysis = Database["public"]["Tables"]["saved_analyses"]["Row"];
 type SavedAnalysisInsert = Database["public"]["Tables"]["saved_analyses"]["Insert"];
 
+type SupabaseErrorLike = {
+  message?: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+  status?: number;
+  name?: string;
+};
+
 export class DatabaseService {
   constructor(private supabase: SupabaseClient<Database>) {}
+
+  private logSupabaseError(label: string, error: unknown, context?: Record<string, unknown>) {
+    const supabaseError = error as SupabaseErrorLike;
+    console.error(`[DatabaseService] ${label} failed`, {
+      message: supabaseError?.message ?? String(error),
+      code: supabaseError?.code,
+      details: supabaseError?.details,
+      hint: supabaseError?.hint,
+      status: supabaseError?.status,
+      name: supabaseError?.name,
+      context,
+      fullError: error,
+    });
+  }
 
   private async execute<T extends { data: any; error: any }>(
     request: any,
@@ -38,26 +61,30 @@ export class DatabaseService {
     console.debug(`[DatabaseService] Fetching inventory items for user: ${userId}`);
 
     const start = Date.now();
-    const { data, error } = await this.execute(
-      this.supabase
+    try {
+      const query = this.supabase
         .from("inventory_items")
         .select("id, user_id, item_name, brand, category, estimated_price, status, created_at, image_url")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
-        .limit(200),
-      15000,
-      "Load inventory items"
-    );
+        .limit(200);
 
-    const duration = Date.now() - start;
-    console.debug(`[DatabaseService] Load inventory items completed in ${duration}ms, returned ${data?.length || 0} items`);
+      const { data, error } = await query;
 
-    if (error) {
-      console.error(`[DatabaseService] Supabase error loading inventory:`, error);
+      const duration = Date.now() - start;
+      console.debug(`[DatabaseService] Load inventory items completed in ${duration}ms, returned ${data?.length || 0} items`);
+
+      if (error) {
+        this.logSupabaseError("Supabase inventory query", error, { userId, duration });
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      const duration = Date.now() - start;
+      this.logSupabaseError("Load inventory items", error, { userId, duration });
       throw error;
     }
-
-    return data || [];
   }
 
   async getInventoryItem(id: number, userId: string): Promise<InventoryItem | null> {

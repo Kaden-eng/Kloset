@@ -3,67 +3,80 @@ import Link from "next/link";
 
 const features = [
   {
-    title: "Authenticated workspaces",
-    description: "Secure user accounts with session persistence and luxury account navigation.",
+    title: "Seller workspace",
+    description: "Secure sessions, saved listing drafts, and fast account switching for your resale flow.",
   },
   {
-    title: "Live inventory intelligence",
-    description: "Saved listings, revenue estimates, and AI-powered market recommendations in one view.",
+    title: "Market-aware inventory",
+    description: "Track items, price ranges, sell-through signals, and platform context from one command center.",
   },
   {
-    title: "Upload and automate",
-    description: "Smart upload flow stores items persistently while generating listing insights instantly.",
+    title: "Upload to operating mode",
+    description: "Turn item photos into clean drafts with useful pricing baselines and editable details.",
   },
 ];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-stone-950 text-white">
+    <div className="min-h-screen bg-[#070807] text-white">
       <Header transparent />
 
       <main className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.06),_transparent_28%)]" />
-        <section className="relative px-6 pt-28 pb-20 lg:px-8">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(183,255,50,0.13),_transparent_26%)]" />
+        <section className="relative px-6 pt-24 pb-16 lg:px-8">
           <div className="mx-auto max-w-6xl">
-            <div className="grid gap-12 lg:grid-cols-[0.95fr_0.65fr] lg:items-end">
+            <div className="grid gap-8 lg:grid-cols-[1fr_0.82fr] lg:items-end">
               <div className="space-y-8">
-                <div className="max-w-xl rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_32px_80px_-48px_rgba(255,255,255,0.15)] backdrop-blur-xl">
-                  <p className="text-[11px] uppercase tracking-[0.4em] text-stone-400">Streetwear resale, sharpened</p>
-                  <h1 className="mt-5 text-5xl font-black uppercase tracking-[-0.05em] text-white sm:text-6xl">
-                    Kloset is the resale platform serious streetwear sellers actually want.
+                <div className="max-w-2xl">
+                  <p className="inline-flex rounded-full border border-[#b7ff32]/25 bg-[#b7ff32]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#d8ff79]">
+                    Resale ops for modern sellers
+                  </p>
+                  <h1 className="mt-6 text-5xl font-semibold tracking-[-0.04em] text-white sm:text-6xl">
+                    Run your closet like a resale desk.
                   </h1>
-                  <p className="mt-6 max-w-2xl text-base leading-8 text-stone-300 sm:text-lg">
-                    A premium resale workspace rooted in skate culture, editorial energy, and fast-moving market intelligence.
+                  <p className="mt-5 max-w-xl text-base leading-8 text-stone-300 sm:text-lg">
+                    Kloset keeps inventory, pricing, drafts, and marketplace signals tight without turning your workspace into a fashion campaign.
                   </p>
                   <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-                    <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-sm font-semibold text-stone-950 transition hover:bg-stone-100">
-                      Start your drop
+                    <Link href="/auth/signup" className="inline-flex items-center justify-center rounded-full bg-[#b7ff32] px-7 py-3.5 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:bg-[#d6ff74] hover:shadow-[0_22px_55px_-30px_rgba(183,255,50,0.9)]">
+                      Start workspace
                     </Link>
-                    <Link href="/auth/login" className="inline-flex items-center justify-center rounded-full border border-white/10 bg-transparent px-8 py-4 text-sm font-semibold text-white transition hover:bg-white/5">
+                    <Link href="/auth/login" className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-7 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10">
                       Sign in
                     </Link>
                   </div>
                 </div>
               </div>
 
-              <div className="relative rounded-[2rem] border border-white/10 bg-black/70 p-8 shadow-[0_50px_120px_-60px_rgba(0,0,0,0.9)] backdrop-blur-xl">
-                <div className="absolute -left-12 top-8 h-20 w-20 rounded-full border border-white/10 bg-white/5 blur-xl" />
+              <div className="relative rounded-[1.75rem] border border-white/10 bg-[#10110f]/80 p-5 shadow-[0_50px_120px_-60px_rgba(0,0,0,0.9)] backdrop-blur-xl">
                 <div className="relative space-y-6">
-                  <div className="text-xs uppercase tracking-[0.32em] text-stone-400">Kloset preview</div>
-                  <div className="grid gap-4 rounded-[1.75rem] border border-white/10 bg-stone-950/80 p-6 shadow-inner">
-                    <div className="rounded-3xl bg-white/5 p-5">
-                      <p className="text-[11px] uppercase tracking-[0.32em] text-stone-400">Persisted work</p>
-                      <h2 className="mt-3 text-xl font-semibold text-white">Inventory built to move</h2>
-                      <p className="mt-3 text-sm leading-6 text-stone-400">
-                        Keep buy lists, price notes, and product mood boards in one clean workspace.
-                      </p>
+                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-stone-400">
+                    <span>Live desk</span>
+                    <span className="text-[#b7ff32]">Synced</span>
+                  </div>
+                  <div className="grid gap-3 rounded-[1.35rem] border border-white/10 bg-black/35 p-4 shadow-inner">
+                    <div className="rounded-[1.15rem] border border-white/10 bg-white/[0.04] p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-[0.22em] text-stone-500">Inventory value</p>
+                          <h2 className="mt-2 text-3xl font-semibold text-white">$8.4k</h2>
+                        </div>
+                        <span className="rounded-full bg-[#b7ff32]/15 px-3 py-1 text-xs font-semibold text-[#d8ff79]">+12%</span>
+                      </div>
                     </div>
-                    <div className="rounded-3xl bg-white/5 p-5">
-                      <p className="text-[11px] uppercase tracking-[0.32em] text-stone-400">Market pulse</p>
-                      <h2 className="mt-3 text-xl font-semibold text-white">Intelligence that feels alive</h2>
-                      <p className="mt-3 text-sm leading-6 text-stone-400">
-                        Get pricing insights with the confidence of skate, street, and collector culture.
-                      </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-[1.15rem] bg-white/[0.04] p-4">
+                        <p className="text-[11px] uppercase tracking-[0.22em] text-stone-500">Drafts</p>
+                        <p className="mt-3 text-2xl font-semibold text-white">18</p>
+                      </div>
+                      <div className="rounded-[1.15rem] bg-white/[0.04] p-4">
+                        <p className="text-[11px] uppercase tracking-[0.22em] text-stone-500">Listed</p>
+                        <p className="mt-3 text-2xl font-semibold text-white">42</p>
+                      </div>
+                    </div>
+                    <div className="rounded-[1.15rem] border border-[#b7ff32]/20 bg-[#b7ff32]/10 p-4">
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-[#d8ff79]">Recommended action</p>
+                      <p className="mt-2 text-sm leading-6 text-stone-200">Push mid-weight jackets to Grailed before weekend demand spikes.</p>
                     </div>
                   </div>
                 </div>
@@ -72,33 +85,33 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="px-6 pb-24 lg:px-8">
+        <section className="px-6 pb-20 lg:px-8">
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-6 md:grid-cols-3">
               {features.map((feature) => (
-                <div key={feature.title} className="rounded-[1.75rem] border border-white/10 bg-white/5 p-8 shadow-[0_20px_60px_-40px_rgba(255,255,255,0.12)] transition hover:-translate-y-1 hover:border-white/20 hover:bg-white/10">
+                <div key={feature.title} className="rounded-[1.35rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_20px_60px_-45px_rgba(255,255,255,0.14)] transition hover:-translate-y-1 hover:border-[#b7ff32]/30 hover:bg-white/[0.07]">
                   <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
                   <p className="mt-4 text-sm leading-7 text-stone-300">{feature.description}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-16 rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_32px_80px_-44px_rgba(255,255,255,0.12)]">
+            <div className="mt-12 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_32px_80px_-50px_rgba(255,255,255,0.12)] sm:p-8">
               <div className="grid gap-8 lg:grid-cols-2">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.32em] text-stone-400">Resale flow, elevated</p>
-                  <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">Built for street sellers, not spreadsheets.</h2>
+                  <p className="text-xs uppercase tracking-[0.26em] text-[#d8ff79]">Resale flow, organized</p>
+                  <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">Serious tooling with street-market context.</h2>
                   <p className="mt-5 text-sm leading-7 text-stone-300">
-                    Clean auth, protected inventory, and a real data stack designed to support hustle, not bookkeeping.
+                    Clean auth, protected inventory, and a real data stack designed for repeat selling work.
                   </p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-3xl bg-black/70 p-6">
-                    <p className="text-sm font-semibold uppercase tracking-[0.24em] text-stone-300">Persistent inventory</p>
+                  <div className="rounded-[1.15rem] bg-black/45 p-5">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-300">Persistent inventory</p>
                     <p className="mt-3 text-sm text-stone-300">Items stay synced to your account so your listings are always ready to post.</p>
                   </div>
-                  <div className="rounded-3xl bg-black/70 p-6">
-                    <p className="text-sm font-semibold uppercase tracking-[0.24em] text-stone-300">Protected dashboard</p>
+                  <div className="rounded-[1.15rem] bg-black/45 p-5">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-300">Protected dashboard</p>
                     <p className="mt-3 text-sm text-stone-300">Session-backed pages keep your resale flow locked and clean.</p>
                   </div>
                 </div>
