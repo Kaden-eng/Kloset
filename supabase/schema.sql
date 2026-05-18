@@ -165,8 +165,11 @@ create policy "Users can delete own inventory images" on storage.objects
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, email, username)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)));
+  insert into public.profiles (id, email, full_name)
+  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)))
+  on conflict (id) do update set
+    email = excluded.email,
+    full_name = excluded.full_name;
   return new;
 end;
 $$ language plpgsql security definer;
@@ -189,7 +192,6 @@ create or replace trigger on_auth_user_created
 
 -- Profiles indexes
 create index if not exists profiles_email_idx on profiles(email);
-create index if not exists profiles_username_idx on profiles(username);
 create index if not exists profiles_created_at_idx on profiles(created_at);
 
 -- Inventory items indexes

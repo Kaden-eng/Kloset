@@ -64,3 +64,91 @@ textarea,
 select {
   font: inherit;
 }
+
+button,
+a,
+select,
+input,
+textarea,
+[role="button"] {
+  transition-duration: 180ms;
+  transition-property: background-color, border-color, box-shadow, color, opacity, transform;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+button,
+a,
+select,
+[role="button"],
+input[type="file"]::file-selector-button {
+  cursor: pointer;
+}
+
+button:hover:not(:disabled),
+a[href]:hover,
+[role="button"]:hover {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled),
+a[href]:active,
+[role="button"]:active {
+  transform: translateY(0);
+}
+
+button:disabled,
+select:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid rgba(120, 113, 108, 0.85);
+  outline-offset: 3px;
+}
+
+input:hover:not(:disabled),
+textarea:hover:not(:disabled),
+select:hover:not(:disabled) {
+  border-color: rgba(120, 113, 108, 0.55);
+  box-shadow: 0 1px 0 rgba(28, 25, 23, 0.03);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 4px rgba(120, 113, 108, 0.12);
+}
+
+a[class*="rounded"]:hover,
+button[class*="rounded"]:hover:not(:disabled) {
+  box-shadow: 0 12px 28px -24px rgba(28, 25, 23, 0.55);
+}
+
+a[class*="border"][class*="bg-white"]:hover,
+button[class*="border"][class*="bg-white"]:hover:not(:disabled),
+a[class*="border"][class*="bg-stone-50"]:hover,
+button[class*="border"][class*="bg-stone-50"]:hover:not(:disabled) {
+  border-color: rgba(120, 113, 108, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+
+  button:hover:not(:disabled),
+  a[href]:hover,
+  [role="button"]:hover {
+    transform: none;
+  }
+}

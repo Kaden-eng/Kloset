@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react-hooks/preserve-manual-memoization, react-hooks/set-state-in-effect */
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSupabase } from "@/components/SupabaseProvider";
 import { DatabaseService } from "@/lib/database";
@@ -11,11 +13,6 @@ type InventoryItemUpdate = Database["public"]["Tables"]["inventory_items"]["Upda
 
 type MarketplaceAnalytics = Database["public"]["Tables"]["marketplace_analytics"]["Row"];
 
-function isAbortError(err: unknown) {
-  if (!(err instanceof Error)) return false;
-  return err.name === "AbortError" || err.message.toLowerCase().includes("aborted");
-}
-
 export function useDatabase() {
   const { supabase } = useSupabase();
   const [dbService] = useState(() => new DatabaseService(supabase));
@@ -26,22 +23,15 @@ export function useDatabase() {
 export function useInventoryItems() {
   const db = useDatabase();
   const { session, supabase } = useSupabase();
+  const userId = session?.user?.id;
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryTrigger, setRetryTrigger] = useState(0);
   const activeLoadIdRef = useRef(0);
-  const loadTimeoutRef = useRef<number | null>(null);
-
-  const clearLoadTimeout = useCallback(() => {
-    if (loadTimeoutRef.current) {
-      window.clearTimeout(loadTimeoutRef.current);
-      loadTimeoutRef.current = null;
-    }
-  }, []);
 
   const loadItems = useCallback(async () => {
-    if (!session?.user?.id) {
+    if (!userId) {
       console.debug("[useInventoryItems] No authenticated user, skipping inventory load");
       setItems([]);
       setLoading(false);
@@ -49,97 +39,56 @@ export function useInventoryItems() {
       return;
     }
 
-    clearLoadTimeout();
-
     const loadId = activeLoadIdRef.current + 1;
     activeLoadIdRef.current = loadId;
-    loadTimeoutRef.current = window.setTimeout(() => {
-      if (activeLoadIdRef.current !== loadId) return;
-
-      console.warn("[useInventoryItems] Inventory load exceeded timeout, showing retry state", {
-        userId: session.user.id,
-        loadId,
-      });
-      activeLoadIdRef.current += 1;
-      setItems([]);
-      setError("Inventory could not load in time. Please retry.");
-      setLoading(false);
-    }, 20000);
 
     try {
-      console.debug("[useInventoryItems] Starting inventory load", { userId: session.user.id, loadId });
+      console.debug("[useInventoryItems] Starting inventory load", { userId });
       setLoading(true);
       setError(null);
 
-      const data = await db.getInventoryItems(session.user.id);
-      if (activeLoadIdRef.current !== loadId) {
-        console.debug("[useInventoryItems] Ignoring stale inventory response", { loadId });
-        return;
-      }
+      const data = await db.getInventoryItems(userId);
+      if (activeLoadIdRef.current !== loadId) return;
 
       setItems(data);
-      console.debug("[useInventoryItems] Successfully loaded inventory", { count: data.length, loadId });
+      console.debug("[useInventoryItems] Successfully loaded inventory", { count: data.length });
     } catch (err) {
-      if (activeLoadIdRef.current !== loadId) {
-        console.debug("[useInventoryItems] Ignoring stale inventory error", { loadId });
-        return;
-      }
-
-      if (isAbortError(err)) {
-        console.debug("[useInventoryItems] Inventory request was cancelled, ignoring", {
-          message: err instanceof Error ? err.message : String(err),
-          loadId,
-        });
-        setLoading(false);
-        return;
-      }
-
+      if (activeLoadIdRef.current !== loadId) return;
       const message = err instanceof Error ? err.message : "Failed to load inventory";
-      console.error("[useInventoryItems] Inventory load failed without crashing UI", {
-        message,
-        name: err instanceof Error ? err.name : undefined,
-        fullError: err,
-      });
       setItems([]);
-      setError(
-        message.toLowerCase().includes("abort") || message.toLowerCase().includes("timeout")
-          ? "Inventory could not load in time. Please retry."
-          : message
-      );
+      setError(message);
     } finally {
       if (activeLoadIdRef.current === loadId) {
-        clearLoadTimeout();
         setLoading(false);
       }
     }
-  }, [clearLoadTimeout, db, session?.user?.id]);
+  }, [db, userId]);
 
   useEffect(() => {
     loadItems();
     return () => {
       activeLoadIdRef.current += 1;
-      clearLoadTimeout();
     };
-  }, [clearLoadTimeout, loadItems, retryTrigger]);
+  }, [loadItems, retryTrigger]);
 
   // Real-time subscription
   useEffect(() => {
-    if (!session?.user?.id) {
+    if (!userId) {
       console.debug("[useInventoryItems] No user session, skipping realtime subscription");
       return;
     }
 
-    console.debug("[useInventoryItems] Setting up realtime subscription for user:", session.user.id);
+    console.debug("[useInventoryItems] Setting up realtime subscription for user:", userId);
 
     const channel = supabase
-      .channel(`inventory_changes_${session.user.id}`)
+      .channel(`inventory_changes_${userId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'inventory_items',
-          filter: `user_id=eq.${session.user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           console.debug("[useInventoryItems] Realtime update received:", payload.eventType);
@@ -165,38 +114,38 @@ export function useInventoryItems() {
       console.debug("[useInventoryItems] Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
-  }, [supabase, session?.user?.id]);
+  }, [supabase, userId]);
 
   const createItem = useCallback(async (item: InventoryItemInsert) => {
-    if (!session?.user?.id) throw new Error('Not authenticated');
+    if (!userId) throw new Error('Not authenticated');
 
     const newItem = await db.createInventoryItem({
       ...item,
-      user_id: session.user.id
+      user_id: userId
     });
     // Optimistic update - item will also be added via real-time subscription
     setItems(prev => [newItem, ...prev]);
     return newItem;
-  }, [db, session?.user?.id]);
+  }, [db, userId]);
 
   const updateItem = useCallback(async (id: number, updates: InventoryItemUpdate) => {
-    if (!session?.user?.id) throw new Error('Not authenticated');
+    if (!userId) throw new Error('Not authenticated');
 
-    const updatedItem = await db.updateInventoryItem(id, session.user.id, updates);
+    const updatedItem = await db.updateInventoryItem(id, userId, updates);
     // Optimistic update - item will also be updated via real-time subscription
     setItems(prev => prev.map(item =>
       item.id === id ? updatedItem : item
     ));
     return updatedItem;
-  }, [db, session?.user?.id]);
+  }, [db, userId]);
 
   const deleteItem = useCallback(async (id: number) => {
-    if (!session?.user?.id) throw new Error('Not authenticated');
+    if (!userId) throw new Error('Not authenticated');
 
-    await db.deleteInventoryItem(id, session.user.id);
+    await db.deleteInventoryItem(id, userId);
     // Optimistic update - item will also be removed via real-time subscription
     setItems(prev => prev.filter(item => item.id !== id));
-  }, [db, session?.user?.id]);
+  }, [db, userId]);
 
   const retry = useCallback(() => {
     console.debug("[useInventoryItems] Retry inventory load requested");

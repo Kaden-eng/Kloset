@@ -1,0 +1,18 @@
+[browser] GoTrueClient@sb-osvkplbscdntetfhyqnu-auth-token:1 (2.105.4) 2026-05-17T22:10:00.791Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. (src/lib/supabaseClient.ts:7:15)
+[browser] GoTrueClient@sb-osvkplbscdntetfhyqnu-auth-token:1 (2.105.4) 2026-05-17T22:10:12.580Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. (src/lib/supabaseClient.ts:7:15)
+[browser] GoTrueClient@sb-osvkplbscdntetfhyqnu-auth-token:1 (2.105.4) 2026-05-17T22:18:06.547Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. (src/lib/supabaseClient.ts:7:15)
+[browser] GoTrueClient@sb-osvkplbscdntetfhyqnu-auth-token:1 (2.105.4) 2026-05-17T22:18:29.464Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. (src/lib/supabaseClient.ts:7:15)
+[browser] Signup failed AuthApiError: Email address "codex-inventory-1779056309444@example.com" is invalid (src/app/auth/signup/page.tsx:40:17)
+[browser] GoTrueClient@sb-osvkplbscdntetfhyqnu-auth-token:1 (2.105.4) 2026-05-17T22:20:24.723Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. (src/lib/supabaseClient.ts:7:15)
+⚠ Fast Refresh had to perform a full reload when ./src/lib/supabaseClient.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/lib/supabaseClient.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/components/SupabaseProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload

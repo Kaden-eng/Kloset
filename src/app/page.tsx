@@ -8,7 +8,7 @@ const features = [
   },
   {
     title: "Market-aware inventory",
-    description: "Track items, price ranges, sell-through signals, and platform context from one command center.",
+    description: "Track items, price ranges, how fast they might sell, and platform context from one workspace.",
   },
   {
     title: "Upload to operating mode",

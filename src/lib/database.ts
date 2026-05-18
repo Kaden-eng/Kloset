@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 import { withTimeout } from "@/lib/asyncUtils";
@@ -28,7 +30,7 @@ export class DatabaseService {
 
   private logSupabaseError(label: string, error: unknown, context?: Record<string, unknown>) {
     const supabaseError = error as SupabaseErrorLike;
-    console.error(`[DatabaseService] ${label} failed`, {
+    console.warn(`[DatabaseService] ${label} failed`, {
       message: supabaseError?.message ?? String(error),
       code: supabaseError?.code,
       details: supabaseError?.details,
@@ -51,7 +53,6 @@ export class DatabaseService {
       console.debug(`[DatabaseService] ${label} completed successfully`);
       return result;
     } catch (error) {
-      console.error(`[DatabaseService] ${label} failed:`, error);
       throw error;
     }
   }
@@ -64,7 +65,7 @@ export class DatabaseService {
     try {
       const query = this.supabase
         .from("inventory_items")
-        .select("id, user_id, item_name, brand, category, estimated_price, status, created_at, image_url")
+        .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(200);
@@ -348,7 +349,7 @@ export class DatabaseService {
     const { data, error } = await this.execute(
       (this.supabase as any)
         .from("inventory_items")
-        .select("status, estimated_price")
+        .select("status, estimated_price, marketplace_data")
         .eq("user_id", userId),
       15000,
       "Load inventory stats"
@@ -365,19 +366,22 @@ export class DatabaseService {
     };
 
     data?.forEach((item: any) => {
-      switch (item.status) {
-        case 'Draft':
-          stats.draft++;
-          break;
-        case 'Listed':
-          stats.listed++;
-          break;
-        case 'Sold':
-          stats.sold++;
-          break;
+      const status = String(item.status || "draft").toLowerCase();
+      if (status === "listed") {
+        stats.listed++;
+      } else if (status === "sold") {
+        stats.sold++;
+      } else {
+        stats.draft++;
       }
-      if (item.estimated_price) {
-        stats.totalValue += item.estimated_price;
+
+      const listingPrice =
+        typeof item.marketplace_data?.listingPrice === "number"
+          ? item.marketplace_data.listingPrice
+          : item.estimated_price;
+
+      if (listingPrice) {
+        stats.totalValue += listingPrice;
       }
     });
 

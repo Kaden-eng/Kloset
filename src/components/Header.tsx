@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/components/SupabaseProvider";
 import { useToast } from "@/components/ToastProvider";
@@ -18,6 +19,7 @@ const navLinks = [
 export default function Header({ transparent = false }: { transparent?: boolean }) {
   const { session, supabase } = useSupabase();
   const router = useRouter();
+  const pathname = usePathname();
   const { addToast } = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -68,14 +70,12 @@ export default function Header({ transparent = false }: { transparent?: boolean 
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error("Logout failed", error);
         addToast(error.message, "error");
         return;
       }
       addToast("Signed out successfully.", "success");
       router.push("/auth/login");
     } catch (err) {
-      console.error("Logout error", err);
       const message = err instanceof Error ? err.message : "Unable to log out. Please try again.";
       addToast(message, "error");
     } finally {
@@ -98,17 +98,29 @@ export default function Header({ transparent = false }: { transparent?: boolean 
 
         <div className="hidden items-center gap-5 lg:flex">
           {session &&
-            navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="text-sm font-medium text-stone-300 transition hover:text-white">
-                {link.label}
-              </Link>
-            ))}
+            navLinks.map((link) => {
+              const active = pathname === link.href || (link.href === "/overview" && pathname === "/dashboard");
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                    active
+                      ? "bg-white/10 text-white shadow-[0_10px_24px_-22px_rgba(255,255,255,0.7)]"
+                      : "text-stone-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
         </div>
 
         <div className="flex items-center gap-3">
           {!session ? (
             <>
-              <Link href="/auth/login" className="text-sm font-medium text-stone-300 transition hover:text-white">
+              <Link href="/auth/login" className="rounded-full px-3 py-1.5 text-sm font-medium text-stone-300 transition hover:bg-white/5 hover:text-white">
                 Sign in
               </Link>
               <Link
@@ -138,7 +150,14 @@ export default function Header({ transparent = false }: { transparent?: boolean 
                   <p className="mt-3 text-sm font-semibold text-white truncate">{session.user.email}</p>
                   <div className="mt-4 space-y-2">
                     {navLinks.map((link) => (
-                      <Link key={link.href} href={link.href} className="block rounded-2xl px-3 py-2 text-sm text-stone-300 transition hover:bg-white/5 hover:text-white">
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        aria-current={pathname === link.href ? "page" : undefined}
+                        className={`block rounded-2xl px-3 py-2 text-sm transition ${
+                          pathname === link.href ? "bg-white/10 text-white" : "text-stone-300 hover:bg-white/5 hover:text-white"
+                        }`}
+                      >
                         {link.label}
                       </Link>
                     ))}
